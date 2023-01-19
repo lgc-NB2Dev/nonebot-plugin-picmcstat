@@ -12,7 +12,6 @@ python = ">=3.8,<4"
 nonebot-plugin-imageutils = "^0.1.13.5"
 mcstatus = "^10.0.1"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
