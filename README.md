@@ -26,7 +26,16 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
 </div>
 
-## 🖼 效果图
+## 📖 介绍
+
+Working in progress ...
+
+### 🖼 效果图
+
+因为下划线、删除线和斜体 [`nonebot-plugin-imageutils`](https://github.com/noneplugin/nonebot-plugin-imageutils) 的 bbcode 还不支持，所以就没做  
+（如果 wq 佬看到这个能不能酌情考虑一下呢 awa）
+
+![example](readme/example.png)
 
 ## 💿 安装
 
@@ -83,6 +92,12 @@ QQ：3076823485
 Telegram：[@lgc2333](https://t.me/lgc2333)  
 吹水群：[1105946125](https://jq.qq.com/?_wv=1027&k=Z3n1MpEp)  
 邮箱：<lgc2333@126.com>
+
+## 💡 鸣谢
+
+### [nonebot-plugin-imageutils](https://github.com/noneplugin/nonebot-plugin-imageutils)
+
+- 超好用的 Pillow 辅助库，快去用 awa
 
 ## 💰 赞助
 

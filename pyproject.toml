@@ -11,6 +11,8 @@ packages = [{include = "nonebot_plugin_picmcstat"}]
 python = ">=3.8,<4"
 nonebot-plugin-imageutils = "^0.1.13.5"
 mcstatus = "^10.0.1"
+nonebot2 = "^2.0.0rc2"
+nonebot-adapter-onebot = "^2.2.0"
 
 [build-system]
 requires = ["poetry-core"]
