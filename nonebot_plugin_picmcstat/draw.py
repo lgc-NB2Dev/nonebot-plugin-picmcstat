@@ -168,7 +168,7 @@ def draw_java(res: PingResponse) -> BytesIO:
         f"§7协议版本: §f{res.version.protocol}\n"
         f"§7当前人数: §f{players_online}/{players_max} ({online_percent}%)\n"
         f"{mod_total}"
-        f"§7游戏延迟: §{get_latency_color(res.latency)}{res.latency:.2f}ms"
+        f"§7测试延迟: §{get_latency_color(res.latency)}{res.latency:.2f}ms"
         f"{player_li}"
         f"{mod_list}"
     )
