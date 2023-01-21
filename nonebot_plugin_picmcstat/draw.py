@@ -43,23 +43,22 @@ def build_img(
     header2: str,
     extra: Text2Image = None,
 ) -> BytesIO:
-    HEADER_TEXT_SIZE = 40
     HEADER_TEXT_COLOR = CODE_COLOR["f"]
     HEADER_STROKE_COLOR = STROKE_COLOR["f"]
 
     HEADER_HEIGHT = 128
     HALF_HEADER_HEIGHT = int(HEADER_HEIGHT / 2)
-    BG_WIDTH = extra.width + MARGIN * 2 if extra else DEFAULT_WIDTH
-    bg_height = HEADER_HEIGHT + MARGIN * 2
 
+    BG_WIDTH = extra.width + MARGIN * 2 if extra else DEFAULT_WIDTH
+    BG_HEIGHT = HEADER_HEIGHT + MARGIN * 2
     if extra:
-        bg_height += extra.height + int(MARGIN / 2)
+        BG_HEIGHT += extra.height + int(MARGIN / 2)
+    bg = draw_bg(BG_WIDTH, BG_HEIGHT)
 
     if icon.size != (HEADER_HEIGHT, HEADER_HEIGHT):
         icon = icon.resize_height(HEADER_HEIGHT, inside=False)
-
-    bg = draw_bg(BG_WIDTH, bg_height)
     bg.paste(icon, (MARGIN, MARGIN), alpha=True)
+
     bg.draw_text(
         (
             HEADER_HEIGHT + MARGIN + MARGIN / 2,
@@ -70,7 +69,7 @@ def build_img(
         header1,
         halign="left",
         fill=HEADER_TEXT_COLOR,
-        max_fontsize=HEADER_TEXT_SIZE,
+        max_fontsize=TITLE_FONT_SIZE,
         fontname=FONT_NAME,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=HEADER_STROKE_COLOR,
@@ -85,7 +84,7 @@ def build_img(
         header2,
         halign="left",
         fill=HEADER_TEXT_COLOR,
-        max_fontsize=HEADER_TEXT_SIZE,
+        max_fontsize=TITLE_FONT_SIZE,
         fontname=FONT_NAME,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=HEADER_STROKE_COLOR,
