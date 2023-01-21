@@ -28,15 +28,15 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
 ## 📖 介绍
 
-直接上图吧~
+插件实际上是可以展示 **玩家列表**、**Mod 端信息 以及 Mod 列表（还未测试）** 的，这里没有找到合适的例子所以没在效果图里展示出来，如果遇到问题可以发 issue
 
-### 🖼 效果图
+插件包体内并没有自带图片内 Unifont 字体，需要的话请参考 [这里](#字体) 安装字体
 
 因为下划线、删除线和斜体 [`nonebot-plugin-imageutils`](https://github.com/noneplugin/nonebot-plugin-imageutils) 的 bbcode 还不支持，所以还没做  
 （如果 wq 佬看到这个能不能酌情考虑一下呢 awa）
 
 <details open>
-<summary>点击展开</summary>
+<summary>效果图</summary>
 
 ![example](readme/example.png)  
 ![example](readme/example_je.png)
@@ -44,6 +44,8 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 </details>
 
 ## 💿 安装
+
+### 插件
 
 <details open>
 <summary>[推荐] 使用 nb-cli 安装</summary>
@@ -87,6 +89,15 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
     nonebot.load_plugin('nonebot_plugin_picmcstat')
 
 </details>
+
+### 字体
+
+字体文件请自行去自行去 [这里](http://ftp.gnu.org/gnu/unifont/unifont-15.0.01/unifont-15.0.01.ttf) 下载
+
+有两种方式可以安装该字体
+
+- 方式一：直接安装在系统中
+- 方式二：放在 `nonebot-plugin-utils` 插件的字体文件目录中并将文件重命名为 `unifont` 即可使用，该插件配置可以参考 [这里](https://github.com/noneplugin/nonebot-plugin-imageutils#%E9%85%8D%E7%BD%AE%E5%AD%97%E4%BD%93)
 
 ## ⚙️ 配置
 
