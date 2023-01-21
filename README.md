@@ -97,7 +97,7 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 有两种方式可以安装该字体
 
 - 方式一：直接安装在系统中
-- 方式二：放在 `nonebot-plugin-utils` 插件的字体文件目录中并将文件重命名为 `unifont` 即可使用，该插件配置可以参考 [这里](https://github.com/noneplugin/nonebot-plugin-imageutils#%E9%85%8D%E7%BD%AE%E5%AD%97%E4%BD%93)
+- 方式二：放在 `nonebot-plugin-imageutils` 插件的字体文件目录中并将文件重命名为 `unifont` 即可使用，该插件配置可以参考 [这里](https://github.com/noneplugin/nonebot-plugin-imageutils#%E9%85%8D%E7%BD%AE%E5%AD%97%E4%BD%93)
 
 ## ⚙️ 配置
 
