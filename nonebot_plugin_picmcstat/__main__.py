@@ -7,7 +7,7 @@ require("nonebot_plugin_imageutils")
 
 from .draw import ServerType, draw
 
-motd_handler = on_command("!motd", aliases={"！motd"})
+motd_handler = on_command("motd", aliases={"!motd", "！motd"})
 
 
 @motd_handler.handle()

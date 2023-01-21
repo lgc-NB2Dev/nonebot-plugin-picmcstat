@@ -2,7 +2,6 @@ import random
 from string import ascii_letters, digits, punctuation
 from typing import List, Union
 
-from mcstatus.pinger import PingResponse
 from .const import CODE_COLOR, STROKE_COLOR, STYLE_BBCODE
 
 RANDOM_CHAR_TEMPLATE = ascii_letters + digits + punctuation

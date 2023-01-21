@@ -8,7 +8,7 @@ from PIL.Image import Resampling
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.bedrock_status import BedrockStatusResponse
 from mcstatus.pinger import PingResponse
-from nonebot import logger
+from nonebot import logger, get_driver
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_imageutils import BuildImage, Text2Image
 
@@ -129,7 +129,10 @@ def format_extra(extra: str) -> Text2Image:
 
 
 def draw_help(svr_type: ServerType) -> BytesIO:
-    extra_txt = "查询Java版服务器: !motd <服务器IP>\n查询基岩版服务器: !motdpe <服务器IP>"
+    cmd_prefix_li = list(get_driver().config.command_start)
+    prefix = cmd_prefix_li[0] if cmd_prefix_li else ""
+
+    extra_txt = f"查询Java版服务器: {prefix}motd <服务器IP>\n查询基岩版服务器: {prefix}motdpe <服务器IP>"
     return build_img(get_header_by_svr_type(svr_type), "使用帮助", format_extra(extra_txt))
 
 
