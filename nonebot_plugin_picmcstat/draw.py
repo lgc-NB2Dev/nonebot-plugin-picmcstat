@@ -1,20 +1,25 @@
+import base64
 import socket
 from asyncio.exceptions import TimeoutError
 from io import BytesIO
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 
+from PIL.Image import Resampling
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.bedrock_status import BedrockStatusResponse
+from mcstatus.pinger import PingResponse
 from nonebot import logger
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_imageutils import BuildImage, Text2Image
 
 from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR
 from .res import DEFAULT_ICON_RES, DIRT_RES, GRASS_RES
-from .util import format_code_to_bbcode, get_latency_color
+from .util import format_code_to_bbcode, format_list, get_latency_color
+
+ServerType = Literal["je", "be"]
 
 MARGIN = 32
-DEFAULT_WIDTH = 640
+MIN_WIDTH = 512
 FONT_NAME = "unifont"
 TITLE_FONT_SIZE = 8 * 5
 EXTRA_FONT_SIZE = 8 * 4
@@ -24,6 +29,11 @@ EXTRA_SPACING = 12
 
 JE_HEADER = "[MCJE服务器信息]"
 BE_HEADER = "[MCBE服务器信息]"
+SUCCESS_TITLE = "请求成功"
+
+
+def get_header_by_svr_type(svr_type: ServerType) -> str:
+    return JE_HEADER if svr_type == "je" else BE_HEADER
 
 
 def draw_bg(width: int, height: int) -> BuildImage:
@@ -38,33 +48,40 @@ def draw_bg(width: int, height: int) -> BuildImage:
 
 
 def build_img(
-    icon: BuildImage,
     header1: str,
     header2: str,
-    extra: Text2Image = None,
+    extra: Optional[Text2Image] = None,
+    icon: Optional[BuildImage] = None,
 ) -> BytesIO:
+    if not icon:
+        icon = DEFAULT_ICON_RES
+
     HEADER_TEXT_COLOR = CODE_COLOR["f"]
     HEADER_STROKE_COLOR = STROKE_COLOR["f"]
 
     HEADER_HEIGHT = 128
     HALF_HEADER_HEIGHT = int(HEADER_HEIGHT / 2)
 
-    BG_WIDTH = extra.width + MARGIN * 2 if extra else DEFAULT_WIDTH
+    BG_WIDTH = extra.width + MARGIN * 2 if extra else MIN_WIDTH
     BG_HEIGHT = HEADER_HEIGHT + MARGIN * 2
+    if BG_WIDTH < MIN_WIDTH:
+        BG_WIDTH = MIN_WIDTH
     if extra:
         BG_HEIGHT += extra.height + int(MARGIN / 2)
     bg = draw_bg(BG_WIDTH, BG_HEIGHT)
 
     if icon.size != (HEADER_HEIGHT, HEADER_HEIGHT):
-        icon = icon.resize_height(HEADER_HEIGHT, inside=False)
+        icon = icon.resize_height(
+            HEADER_HEIGHT, inside=False, resample=Resampling.NEAREST
+        )
     bg.paste(icon, (MARGIN, MARGIN), alpha=True)
 
     bg.draw_text(
         (
             HEADER_HEIGHT + MARGIN + MARGIN / 2,
-            MARGIN,
+            MARGIN - 4,
             BG_WIDTH - MARGIN,
-            HALF_HEADER_HEIGHT + MARGIN,
+            HALF_HEADER_HEIGHT + MARGIN + 4,
         ),
         header1,
         halign="left",
@@ -77,9 +94,9 @@ def build_img(
     bg.draw_text(
         (
             HEADER_HEIGHT + MARGIN + MARGIN / 2,
-            HALF_HEADER_HEIGHT + MARGIN,
+            HALF_HEADER_HEIGHT + MARGIN - 4,
             BG_WIDTH - MARGIN,
-            HEADER_HEIGHT + MARGIN,
+            HEADER_HEIGHT + MARGIN + 4,
         ),
         header2,
         halign="left",
@@ -96,37 +113,12 @@ def build_img(
             (MARGIN, int(HEADER_HEIGHT + MARGIN + MARGIN / 2)),
         )
 
-    # bg.image.show()
-    with open("test.png", "wb") as f:
-        bg.image.save(f)
     return bg.convert("RGB").save("PNG")
 
 
-def draw_java(res) -> BytesIO:
-    pass
-
-
-def draw_bedrock(res: BedrockStatusResponse) -> BytesIO:
-    map_name = f"§7存档名称：§f{res.map}§r\n" if res.map else ""
-    game_mode = (
-        f"§7游戏模式：§f{GAME_MODE_MAP.get(res.gamemode, res.gamemode)}\n"
-        if res.gamemode
-        else ""
-    )
-    online_percent = round(int(res.players_online) / int(res.players_max) * 100, 2)
-
-    extra_txt = (
-        f"{res.motd}§r\n"
-        f"§7协议版本：§f{res.version.protocol}\n"
-        f"§7游戏版本：§f{res.version.version}\n"
-        f"§7在线人数：§f{res.players_online}/{res.players_max} ({online_percent}%)\n"
-        f"{map_name}"
-        f"{game_mode}"
-        f"§7测试延迟：§{get_latency_color(res.latency)}{res.latency:.2f}ms"
-    )
-
-    extra = Text2Image.from_bbcode_text(
-        format_code_to_bbcode(extra_txt),
+def format_extra(extra: str) -> Text2Image:
+    return Text2Image.from_bbcode_text(
+        format_code_to_bbcode(extra),
         EXTRA_FONT_SIZE,
         fill=CODE_COLOR["f"],
         fontname=FONT_NAME,
@@ -134,10 +126,74 @@ def draw_bedrock(res: BedrockStatusResponse) -> BytesIO:
         stroke_fill=STROKE_COLOR["f"],
         spacing=EXTRA_SPACING,
     )
-    return build_img(DEFAULT_ICON_RES, BE_HEADER, "请求成功", extra)
 
 
-def draw_error(e: Exception, svr_type: str) -> BytesIO:
+def draw_help(svr_type: ServerType) -> BytesIO:
+    extra_txt = "查询Java版服务器: !motd <服务器IP>\n查询基岩版服务器: !motdpe <服务器IP>"
+    return build_img(get_header_by_svr_type(svr_type), "使用帮助", format_extra(extra_txt))
+
+
+def draw_java(res: PingResponse) -> BytesIO:
+    icon = None
+    if res.favicon:
+        icon = BuildImage.open(BytesIO(base64.b64decode(res.favicon.split(",")[-1])))
+
+    players_online = res.players.online
+    players_max = res.players.max
+    online_percent = round(players_online / players_max * 100, 2)
+
+    player_li = ""
+    if res.players.sample:
+        sample = [x.name for x in res.players.sample]
+        player_li = f"\n§7玩家列表: §f{format_list(sample)}"
+
+    mod_client = ""
+    mod_total = ""
+    mod_list = ""
+    if mod_info := res.raw.get("modinfo"):
+        if tmp := mod_info.get("type"):
+            mod_client = f"§7Mod端类型: §f{tmp}\n"
+
+        if tmp := mod_info.get("modList"):
+            mod_total = f"§7Mod总数: §f{len(tmp)}\n"
+            mod_list = f"§7Mod列表: §f{format_list(tmp)}\n"  # type: ignore
+
+    extra_txt = (
+        f"{res.description}§r\n"
+        f"§7服务端名: §f{res.version.name}\n"
+        f"{mod_client}"
+        f"§7协议版本: §f{res.version.protocol}\n"
+        f"§7当前人数: §f{players_online}/{players_max} ({online_percent}%)\n"
+        f"{mod_total}"
+        f"§7游戏延迟: §{get_latency_color(res.latency)}{res.latency:.2f}ms"
+        f"{player_li}"
+        f"{mod_list}"
+    )
+    return build_img(JE_HEADER, SUCCESS_TITLE, format_extra(extra_txt), icon)
+
+
+def draw_bedrock(res: BedrockStatusResponse) -> BytesIO:
+    map_name = f"§7存档名称: §f{res.map}§r\n" if res.map else ""
+    game_mode = (
+        f"§7游戏模式: §f{GAME_MODE_MAP.get(res.gamemode, res.gamemode)}\n"
+        if res.gamemode
+        else ""
+    )
+    online_percent = round(int(res.players_online) / int(res.players_max) * 100, 2)
+
+    extra_txt = (
+        f"{res.motd}§r\n"
+        f"§7协议版本: §f{res.version.protocol}\n"
+        f"§7游戏版本: §f{res.version.version}\n"
+        f"§7在线人数: §f{res.players_online}/{res.players_max} ({online_percent}%)\n"
+        f"{map_name}"
+        f"{game_mode}"
+        f"§7测试延迟: §{get_latency_color(res.latency)}{res.latency:.2f}ms"
+    )
+    return build_img(BE_HEADER, SUCCESS_TITLE, format_extra(extra_txt))
+
+
+def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
     extra = ""
     if isinstance(e, TimeoutError):
         reason = "请求超时"
@@ -149,28 +205,22 @@ def draw_error(e: Exception, svr_type: str) -> BytesIO:
         extra = repr(e)
 
     if extra:
-        extra = Text2Image.from_text(
-            extra,
-            EXTRA_FONT_SIZE,
-            fill=CODE_COLOR["f"],
-            fontname=FONT_NAME,
-            stroke_width=EXTRA_STROKE_WIDTH,
-            stroke_fill=STROKE_COLOR["f"],
-        ).wrap(DEFAULT_WIDTH - MARGIN * 2)
+        extra = format_extra(extra).wrap(MIN_WIDTH - MARGIN * 2)
 
-    return build_img(
-        DEFAULT_ICON_RES, JE_HEADER if svr_type == "je" else BE_HEADER, reason, extra
-    )
+    return build_img(get_header_by_svr_type(svr_type), reason, extra)
 
 
-async def draw(ip: str, svr_type: Literal["je", "be"]) -> Union[MessageSegment, str]:
+async def draw(ip: str, svr_type: ServerType) -> Union[MessageSegment, str]:
     if svr_type not in ("je", "be"):
         raise ValueError("Server type must be `je` or `be`")
 
     try:
+        if not ip:
+            return MessageSegment.image(draw_help(svr_type))
+
         if svr_type == "je":
             return MessageSegment.image(
-                draw_java(await (await JavaServer.async_lookup(ip)).async_query())
+                draw_java(await (await JavaServer.async_lookup(ip)).async_status())
             )
         else:  # be
             return MessageSegment.image(

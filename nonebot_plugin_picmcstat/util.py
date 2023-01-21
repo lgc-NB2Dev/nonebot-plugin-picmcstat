@@ -2,6 +2,7 @@ import random
 from string import ascii_letters, digits, punctuation
 from typing import List, Union
 
+from mcstatus.pinger import PingResponse
 from .const import CODE_COLOR, STROKE_COLOR, STYLE_BBCODE
 
 RANDOM_CHAR_TEMPLATE = ascii_letters + digits + punctuation
@@ -59,8 +60,27 @@ def format_code_to_bbcode(text: str) -> str:
 
     parsed.extend(color_tails)
     parsed.extend(format_tails)
-    return "".join(parsed)
+    return "\n".join([x.strip() for x in "".join(parsed).splitlines()])
 
 
-def json_to_bbcode(json: dict) -> str:
-    pass
+def format_list(sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2):
+    if not sample:
+        return ""
+
+    max_width = max([len(x) for x in sample]) + list_gap
+
+    line_added = 0
+    tmp = []
+    for name in sample:
+        if line_added < items_per_line:
+            name = name.ljust(max_width)
+
+        tmp.append(name)
+        line_added += 1
+
+        if line_added >= items_per_line:
+            tmp.append("\n")
+            tmp.append(" " * line_start_spaces)
+            line_added = 0
+
+    return "".join(tmp)

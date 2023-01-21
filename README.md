@@ -28,14 +28,20 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
 ## 📖 介绍
 
-Working in progress ...
+直接上图吧~
 
 ### 🖼 效果图
 
-因为下划线、删除线和斜体 [`nonebot-plugin-imageutils`](https://github.com/noneplugin/nonebot-plugin-imageutils) 的 bbcode 还不支持，所以就没做  
+因为下划线、删除线和斜体 [`nonebot-plugin-imageutils`](https://github.com/noneplugin/nonebot-plugin-imageutils) 的 bbcode 还不支持，所以还没做  
 （如果 wq 佬看到这个能不能酌情考虑一下呢 awa）
 
-![example](readme/example.png)
+<details open>
+<summary>点击展开</summary>
+
+![example](readme/example.png)  
+![example](readme/example_je.png)
+
+</details>
 
 ## 💿 安装
 
@@ -84,7 +90,13 @@ Working in progress ...
 
 ## ⚙️ 配置
 
+暂无配置
+
 ## 🎉 使用
+
+发送 `!motd` 查看使用指南
+
+![usage](readme/usage.png)
 
 ## 📞 联系
 
