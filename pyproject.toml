@@ -5,7 +5,6 @@ description = "A NoneBot2 plugin generates a pic from a Minecraft server's MOTD"
 authors = ["lgc2333 <lgc2333@126.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "nonebot_plugin_picmcstat"}]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4"
