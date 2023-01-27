@@ -30,8 +30,11 @@ def random_char(length: int) -> str:
     return "".join(random.choices(RANDOM_CHAR_TEMPLATE, k=length))
 
 
-def strip_lines(txt: str):
-    return "\n".join([x.strip() for x in txt.splitlines()])
+def strip_lines(txt: str)->str:
+    head_space_regex = re.compile(rf"^(({FORMAT_CODE_REGEX})+)\s+", re.M)
+    txt= "\n".join([x.strip() for x in txt.splitlines()])
+    txt=re.sub(head_space_regex, r"\1", txt)
+    return txt
 
 
 def replace_format_code(txt: str, new_str: str = "") -> str:
@@ -80,15 +83,11 @@ def format_code_to_bbcode(text: str) -> str:
 
 
 def format_list(
-    origin_sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2
+    sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2
 ):
-    if not origin_sample:
-        return ""
-
-    sample = []
-    for i in origin_sample:
-        sample.extend([x.strip() for x in i.splitlines()])
     sample = [x for x in sample if x]
+    if not sample:
+        return ""
 
     max_width = max([len(replace_format_code(x)) for x in sample]) + list_gap
 
