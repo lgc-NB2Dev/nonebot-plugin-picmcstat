@@ -59,7 +59,7 @@ STRING_CODE = {
     "light_purple": "d",
     "yellow": "e",
     "white": "f",
-    "bold": "b",
+    "bold": "l",
     "italic": "o",
     "underlined": "n",
     "strikethrough": "m",
