@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-picmcstat"
-version = "0.2.1"
+version = "0.2.2"
 description = "A NoneBot2 plugin generates a pic from a Minecraft server's MOTD"
 authors = ["lgc2333 <lgc2333@126.com>"]
 license = "MIT"
