@@ -19,6 +19,7 @@ from .util import (
     format_list,
     get_latency_color,
     json_to_format_code,
+    strip_lines,
 )
 
 MARGIN = 32
@@ -147,8 +148,9 @@ def draw_java(res: PingResponse) -> BytesIO:
     players_online = res.players.online
     players_max = res.players.max
     online_percent = (
-        round(players_online / players_max * 100, 2) if players_max else "?.??"
+        "{:.2f}".format(players_online / players_max * 100) if players_max else "?.??"
     )
+    motd=strip_lines(json_to_format_code(res.raw['description']))
 
     player_li = ""
     if res.players.sample:
@@ -167,7 +169,7 @@ def draw_java(res: PingResponse) -> BytesIO:
             mod_list = f"§7Mod列表: §f{format_list(tmp)}\n"  # type: ignore
 
     extra_txt = (
-        f"{json_to_format_code(res.raw['description'])}§r\n"
+        f"{motd}§r\n"
         f"§7服务端名: §f{res.version.name}\n"
         f"{mod_client}"
         f"§7协议版本: §f{res.version.protocol}\n"
@@ -188,13 +190,14 @@ def draw_bedrock(res: BedrockStatusResponse) -> BytesIO:
         else ""
     )
     online_percent = (
-        round(int(res.players_online) / int(res.players_max) * 100, 2)
+        "{:.2f}".format(int(res.players_online) / int(res.players_max) * 100)
         if res.players_max
         else "?.??"
     )
+    motd=strip_lines(res.motd)
 
     extra_txt = (
-        f"{res.motd}§r\n"
+        f"{motd}§r\n"
         f"§7协议版本: §f{res.version.protocol}\n"
         f"§7游戏版本: §f{res.version.version}\n"
         f"§7在线人数: §f{res.players_online}/{res.players_max} ({online_percent}%)\n"

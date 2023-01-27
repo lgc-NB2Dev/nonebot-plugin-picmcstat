@@ -73,3 +73,5 @@ STYLE_BBCODE = {
 }
 
 GAME_MODE_MAP = {"Survival": "生存", "Creative": "创造", "Adventure": "冒险"}
+
+FORMAT_CODE_REGEX=r"§[0-9abcdefgklmnor]"

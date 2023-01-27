@@ -1,9 +1,11 @@
 import json as JSON
 import random
+import re
+
 from string import ascii_letters, digits, punctuation
 from typing import List, Optional, TypedDict, Union
 
-from .const import CODE_COLOR, STRING_CODE, STROKE_COLOR, STYLE_BBCODE
+from .const import CODE_COLOR,FORMAT_CODE_REGEX, STRING_CODE, STROKE_COLOR, STYLE_BBCODE
 
 RANDOM_CHAR_TEMPLATE = ascii_letters + digits + punctuation
 
@@ -21,6 +23,11 @@ def get_latency_color(delay: Union[int, float]) -> str:
 def random_char(length: int) -> str:
     return "".join(random.choices(RANDOM_CHAR_TEMPLATE, k=length))
 
+def strip_lines(txt:str):
+    return "\n".join([x.strip() for x in txt.splitlines()])
+
+def replace_format_code(txt:str,new_str:str="")->str:
+    return re.sub(FORMAT_CODE_REGEX,new_str,txt)
 
 def format_code_to_bbcode(text: str) -> str:
     if not text:
@@ -60,20 +67,26 @@ def format_code_to_bbcode(text: str) -> str:
 
     parsed.extend(color_tails)
     parsed.extend(format_tails)
-    return "\n".join([x.strip() for x in "".join(parsed).splitlines()])
+    return "".join(parsed)
 
 
-def format_list(sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2):
-    if not sample:
+def format_list(origin_sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2):
+    if not origin_sample:
         return ""
 
-    max_width = max([len(x) for x in sample]) + list_gap
+    sample=[]
+    for i in origin_sample:
+        sample.extend([x.strip() for x in i.splitlines()])
+    sample=[x for x in sample if x]
+
+    max_width = max([len(replace_format_code(x)) for x in sample]) + list_gap
 
     line_added = 0
     tmp = []
     for name in sample:
         if line_added < items_per_line:
-            name = name.ljust(max_width)
+            code_len=len(name)-len(replace_format_code(name))
+            name = name.ljust(max_width+code_len)
 
         tmp.append(name)
         line_added += 1
@@ -118,7 +131,7 @@ def json_to_format_code(json: RawTextType, interpret: Optional[bool] = None) -> 
     if isinstance(json, list):
         return "§r".join([json_to_format_code(x, interpret) for x in json])
 
-    interpret = json.get("interpret") or interpret
+    interpret = interpret if (i:=json.get("interpret")) is None else i
     code = "".join(get_format_code_by_dict(json))
     texts = []
     for k, v in json.items():
@@ -133,3 +146,5 @@ def json_to_format_code(json: RawTextType, interpret: Optional[bool] = None) -> 
             texts.append(json_to_format_code(v, interpret))
 
     return f"{code}{''.join(texts)}"
+
+
