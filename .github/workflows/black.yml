@@ -2,8 +2,10 @@ name: Black
 
 on: [push]
 
+permissions: write-all
+
 jobs:
-  build:
+  format:
     runs-on: ubuntu-latest
     strategy:
       matrix:
