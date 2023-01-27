@@ -146,7 +146,7 @@ def draw_java(res: PingResponse) -> BytesIO:
 
     players_online = res.players.online
     players_max = res.players.max
-    online_percent = round(players_online / players_max * 100, 2)
+    online_percent = round(players_online / players_max * 100, 2) if players_max else "?.??"
 
     player_li = ""
     if res.players.sample:
@@ -185,7 +185,7 @@ def draw_bedrock(res: BedrockStatusResponse) -> BytesIO:
         if res.gamemode
         else ""
     )
-    online_percent = round(int(res.players_online) / int(res.players_max) * 100, 2)
+    online_percent = round(int(res.players_online) / int(res.players_max) * 100, 2) if res.players_max else "?.??"
 
     extra_txt = (
         f"{res.motd}§r\n"
