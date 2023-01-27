@@ -30,10 +30,10 @@ def random_char(length: int) -> str:
     return "".join(random.choices(RANDOM_CHAR_TEMPLATE, k=length))
 
 
-def strip_lines(txt: str)->str:
+def strip_lines(txt: str) -> str:
     head_space_regex = re.compile(rf"^(({FORMAT_CODE_REGEX})+)\s+", re.M)
-    txt= "\n".join([x.strip() for x in txt.splitlines()])
-    txt=re.sub(head_space_regex, r"\1", txt)
+    txt = "\n".join([x.strip() for x in txt.splitlines()])
+    txt = re.sub(head_space_regex, r"\1", txt)
     return txt
 
 
@@ -82,9 +82,7 @@ def format_code_to_bbcode(text: str) -> str:
     return "".join(parsed)
 
 
-def format_list(
-    sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2
-):
+def format_list(sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2):
     sample = [x for x in sample if x]
     if not sample:
         return ""
