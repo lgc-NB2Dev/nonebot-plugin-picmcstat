@@ -32,8 +32,11 @@ def random_char(length: int) -> str:
 
 def strip_lines(txt: str) -> str:
     head_space_regex = re.compile(rf"^(({FORMAT_CODE_REGEX})+)\s+", re.M)
+    tail_space_regex = re.compile(rf"\s+(({FORMAT_CODE_REGEX})+)$", re.M)
+
     txt = "\n".join([x.strip() for x in txt.splitlines()])
     txt = re.sub(head_space_regex, r"\1", txt)
+    txt = re.sub(tail_space_regex, r"\1", txt)
     return txt
 
 
