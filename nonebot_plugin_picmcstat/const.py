@@ -1,3 +1,7 @@
+from typing import Literal
+
+ServerType = Literal["je", "be"]
+
 CODE_COLOR = {
     "0": "#000000",
     "1": "#0000AA",
@@ -38,7 +42,7 @@ STROKE_COLOR = {
     "g": "#373501",
 }
 
-STRING_COLOR = {
+STRING_CODE = {
     "black": "0",
     "dark_blue": "1",
     "dark_green": "2",
@@ -55,6 +59,10 @@ STRING_COLOR = {
     "light_purple": "d",
     "yellow": "e",
     "white": "f",
+    "bold": "b",
+    "italic": "o",
+    "underlined": "n",
+    "strikethrough": "m",
 }
 
 STYLE_BBCODE = {

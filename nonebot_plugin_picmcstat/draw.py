@@ -2,21 +2,24 @@ import base64
 import socket
 from asyncio.exceptions import TimeoutError
 from io import BytesIO
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
 from PIL.Image import Resampling
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.bedrock_status import BedrockStatusResponse
 from mcstatus.pinger import PingResponse
-from nonebot import logger, get_driver
+from nonebot import get_driver, logger
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_imageutils import BuildImage, Text2Image
 
-from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR
+from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
 from .res import DEFAULT_ICON_RES, DIRT_RES, GRASS_RES
-from .util import format_code_to_bbcode, format_list, get_latency_color
-
-ServerType = Literal["je", "be"]
+from .util import (
+    format_code_to_bbcode,
+    format_list,
+    get_latency_color,
+    json_to_format_code,
+)
 
 MARGIN = 32
 MIN_WIDTH = 512
@@ -162,7 +165,7 @@ def draw_java(res: PingResponse) -> BytesIO:
             mod_list = f"§7Mod列表: §f{format_list(tmp)}\n"  # type: ignore
 
     extra_txt = (
-        f"{res.description}§r\n"
+        f"{json_to_format_code(res.raw['description'])}§r\n"
         f"§7服务端名: §f{res.version.name}\n"
         f"{mod_client}"
         f"§7协议版本: §f{res.version.protocol}\n"

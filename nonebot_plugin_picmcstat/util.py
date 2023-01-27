@@ -1,8 +1,9 @@
+import json as JSON
 import random
 from string import ascii_letters, digits, punctuation
-from typing import List, Union
+from typing import List, Optional, TypedDict, Union
 
-from .const import CODE_COLOR, STROKE_COLOR, STYLE_BBCODE
+from .const import CODE_COLOR, STRING_CODE, STROKE_COLOR, STYLE_BBCODE
 
 RANDOM_CHAR_TEMPLATE = ascii_letters + digits + punctuation
 
@@ -83,3 +84,52 @@ def format_list(sample: List[str], items_per_line=2, line_start_spaces=10, list_
             line_added = 0
 
     return "".join(tmp)
+
+
+class RawTextDictType(TypedDict):
+    text: str
+    color: Optional[str]
+    bold: Optional[bool]
+    italic: Optional[bool]
+    underlined: Optional[bool]
+    strikethrough: Optional[bool]
+    obfuscated: Optional[bool]  # &k random
+    interpret: Optional[bool]  # `text` need parse
+    extra: List["RawTextType"]
+
+
+RawTextType = Union[str, RawTextDictType, List[RawTextDictType]]
+
+
+def get_format_code_by_dict(json: RawTextDictType) -> list:
+    codes = []
+    if color := json.get("color"):
+        codes.append(f"§{STRING_CODE[color]}")
+
+    for k in ["bold", "italic", "underlined", "strikethrough", "obfuscated"]:
+        if json.get(k):  # type: ignore
+            codes.append(f"§{STRING_CODE[k]}")
+    return codes
+
+
+def json_to_format_code(json: RawTextType, interpret: Optional[bool] = None) -> str:
+    if isinstance(json, str):
+        return json
+    if isinstance(json, list):
+        return "§r".join([json_to_format_code(x, interpret) for x in json])
+
+    interpret = json.get("interpret") or interpret
+    code = "".join(get_format_code_by_dict(json))
+    texts = []
+    for k, v in json.items():
+        if k == "text":
+            if interpret:
+                try:
+                    v = json_to_format_code(JSON.loads(v), interpret)
+                except:
+                    pass
+            texts.append(v)
+        if k == "extra":
+            texts.append(json_to_format_code(v, interpret))
+
+    return f"{code}{''.join(texts)}"

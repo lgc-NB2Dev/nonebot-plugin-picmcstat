@@ -1,7 +1,11 @@
-from nonebot import on_command, require
+from typing import Awaitable, Callable, NoReturn
+
+from nonebot import on_command, on_regex, require
 from nonebot.internal.adapter import Message
 from nonebot.matcher import Matcher
 from nonebot.params import CommandArg
+
+from .config import config
 
 require("nonebot_plugin_imageutils")
 
@@ -24,3 +28,23 @@ async def _(matcher: Matcher, arg: Message = CommandArg()):
 
     arg = arg.strip()
     await matcher.finish(await draw(arg, svr_type))
+
+
+def get_shortcut_handler(
+    host: str, svr_type: ServerType
+) -> Callable[[...], Awaitable[NoReturn]]:
+    async def shortcut_handler(matcher: Matcher):
+        await matcher.finish(await draw(host, svr_type))
+
+    return shortcut_handler
+
+
+def startup():
+    if s := config.mcstat_shortcuts:
+        for shortcut in s:
+            on_regex(shortcut["regex"]).append_handler(
+                get_shortcut_handler(shortcut["host"], shortcut["type"])
+            )
+
+
+startup()
