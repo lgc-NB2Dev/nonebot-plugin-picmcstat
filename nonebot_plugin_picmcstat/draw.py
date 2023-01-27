@@ -150,7 +150,7 @@ def draw_java(res: PingResponse) -> BytesIO:
     online_percent = (
         "{:.2f}".format(players_online / players_max * 100) if players_max else "?.??"
     )
-    motd=strip_lines(json_to_format_code(res.raw['description']))
+    motd = strip_lines(json_to_format_code(res.raw["description"]))
 
     player_li = ""
     if res.players.sample:
@@ -194,7 +194,7 @@ def draw_bedrock(res: BedrockStatusResponse) -> BytesIO:
         if res.players_max
         else "?.??"
     )
-    motd=strip_lines(res.motd)
+    motd = strip_lines(res.motd)
 
     extra_txt = (
         f"{motd}§r\n"
