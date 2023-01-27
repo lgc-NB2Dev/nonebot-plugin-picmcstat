@@ -23,8 +23,7 @@ jobs:
           black ./
       - name: Push
         run: |
-          git config --global user.email ${{ secrets.EMAIL }}
-          git config --global user.name ${{ secrets.NAME }}
-          git add .
-          git commit -m "style: use black to format code" || exit 0
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git commit -m "style: use black to format code" -a || exit 0
           git push
