@@ -1,4 +1,4 @@
-from typing import Awaitable, Callable, NoReturn
+from typing import Any, Awaitable, Callable, NoReturn
 
 from nonebot import on_command, on_regex, require
 from nonebot.internal.adapter import Message
@@ -32,7 +32,7 @@ async def _(matcher: Matcher, arg: Message = CommandArg()):
 
 def get_shortcut_handler(
     host: str, svr_type: ServerType
-) -> Callable[[...], Awaitable[NoReturn]]:
+) -> Callable[[Any], Awaitable[NoReturn]]:
     async def shortcut_handler(matcher: Matcher):
         await matcher.finish(await draw(host, svr_type))
 

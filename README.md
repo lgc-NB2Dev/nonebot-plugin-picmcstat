@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD033 MD036 MD041 -->
+
 <div align="center">
   <a href="https://v2.nonebot.dev/store"><img src="readme/picmcstat.png" width="180" height="180" alt="NoneBotPluginLogo"></a>
   <br>
@@ -116,9 +118,7 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
 最终的配置项看起来是这样子的，当你发送 `查服` 时，机器人会把 EaseCation 服务器的状态发送出来
 
-```env
-MCSTAT_SHORTCUTS=[{"regex":"^查服$","host":"asia.easecation.net","type":"be"}]
-```
+    MCSTAT_SHORTCUTS=[{"regex":"^查服$","host":"asia.easecation.net","type":"be"}]
 
 ## 🎉 使用
 
@@ -153,6 +153,10 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 
 ## 📝 更新日志
 
+### 0.2.4
+
+- 修复玩家列表底下的多余空行
+
 ### 0.2.3
 
 - 修复 JE 服务器 Motd 中粗体意外显示为蓝色的 bug
@@ -170,7 +174,8 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 
 - 加入快捷指令，详见配置项
 - 修复某些 JE 服无法正确显示 Motd 的问题
-- 
+-
+
 ### 0.1.1
 
 - 将查 JE 服时的 `游戏延迟` 字样 改为 `测试延迟`

@@ -85,7 +85,9 @@ def format_code_to_bbcode(text: str) -> str:
     return "".join(parsed)
 
 
-def format_list(sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2):
+def format_list(
+    sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2
+) -> str:
     sample = [x for x in sample if x]
     if not sample:
         return ""
@@ -107,7 +109,7 @@ def format_list(sample: List[str], items_per_line=2, line_start_spaces=10, list_
             tmp.append(" " * line_start_spaces)
             line_added = 0
 
-    return "".join(tmp)
+    return "".join(tmp).strip()
 
 
 class RawTextDictType(TypedDict):
