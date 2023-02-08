@@ -1,6 +1,8 @@
-from nonebot.plugin import PluginMetadata
+from nonebot.plugin import PluginMetadata, require
 
-from .__main__ import *
+require("nonebot_plugin_imageutils")
+
+from .__main__ import *  # noqa
 
 __plugin_meta__ = PluginMetadata(
     name="PicMCStat",
@@ -8,4 +10,4 @@ __plugin_meta__ = PluginMetadata(
     usage="使用 motd 指令查看使用帮助",
 )
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"

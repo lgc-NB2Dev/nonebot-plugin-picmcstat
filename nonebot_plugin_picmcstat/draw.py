@@ -8,7 +8,8 @@ from PIL.Image import Resampling
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.bedrock_status import BedrockStatusResponse
 from mcstatus.pinger import PingResponse
-from nonebot import get_driver, logger
+from nonebot import get_driver
+from nonebot.log import logger
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_imageutils import BuildImage, Text2Image
 
@@ -150,7 +151,7 @@ def draw_java(res: PingResponse) -> BytesIO:
     online_percent = (
         "{:.2f}".format(players_online / players_max * 100) if players_max else "?.??"
     )
-    motd = strip_lines(json_to_format_code(res.raw["description"]))
+    motd = strip_lines(json_to_format_code(res.raw["description"]))  # type: ignore
 
     player_li = ""
     if res.players.sample:
@@ -219,10 +220,9 @@ def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
         reason = "出错了！"
         extra = repr(e)
 
-    if extra:
-        extra = format_extra(extra).wrap(MIN_WIDTH - MARGIN * 2)
+    extra_img = format_extra(extra).wrap(MIN_WIDTH - MARGIN * 2) if extra else None
 
-    return build_img(get_header_by_svr_type(svr_type), reason, extra)
+    return build_img(get_header_by_svr_type(svr_type), reason, extra_img)
 
 
 async def draw(ip: str, svr_type: ServerType) -> Union[MessageSegment, str]:

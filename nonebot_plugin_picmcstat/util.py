@@ -151,11 +151,11 @@ def json_to_format_code(json: RawTextType, interpret: Optional[bool] = None) -> 
         if k == "text":
             if interpret:
                 try:
-                    v = json_to_format_code(JSON.loads(v), interpret)
+                    v = json_to_format_code(JSON.loads(v), interpret)  # type: ignore
                 except:
                     pass
             texts.append(v)
         if k == "extra":
-            texts.append(json_to_format_code(v, interpret))
+            texts.append(json_to_format_code(v, interpret))  # type: ignore
 
     return f"{code}{''.join(texts)}"
