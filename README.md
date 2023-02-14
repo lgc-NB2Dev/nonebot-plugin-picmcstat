@@ -115,6 +115,7 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 - `host` - 要查询的服务器地址，格式为 `<IP>[:端口]`，  
   例如 `hypixel.net` 或 `example.com:1919`
 - `type` - 要查询服务器的类型，`je` 表示 Java 版服，`be` 表示基岩版服
+- `whitelist` - 群聊白名单，只有里面列出的群号可以查询，可以不填来对所有群开放查询
 
 最终的配置项看起来是这样子的，当你发送 `查服` 时，机器人会把 EaseCation 服务器的状态发送出来
 
@@ -152,6 +153,14 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
   </details>
 
 ## 📝 更新日志
+
+### 0.2.6
+
+- 修复 `shortcut` 中没有 `whitelist` 项会报错的问题
+
+### 0.2.5
+
+- `shortcut` 加入 `whitelist` 项配置触发群白名单
 
 ### 0.2.4
 
