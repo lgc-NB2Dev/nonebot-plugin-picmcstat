@@ -10,7 +10,7 @@ class ShortcutType(TypedDict):
     regex: str
     host: str
     type: ServerType
-    whitelist: Optional[List[int]]
+    whitelist: Optional[List[int]] = []
 
 
 class ConfigClass(BaseModel):
