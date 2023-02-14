@@ -10,4 +10,4 @@ __plugin_meta__ = PluginMetadata(
     usage="使用 motd 指令查看使用帮助",
 )
 
-__version__ = "0.2.6"
+__version__ = "0.2.6.post1"

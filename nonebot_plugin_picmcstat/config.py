@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from .const import ServerType
 
 
-class ShortcutType(TypedDict):
+class ShortcutType(BaseModel):
     regex: str
     host: str
     type: ServerType

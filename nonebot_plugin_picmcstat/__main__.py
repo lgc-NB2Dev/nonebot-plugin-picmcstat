@@ -42,14 +42,14 @@ def startup():
         for shortcut in s:
 
             async def rule(event: MessageEvent):
-                if (wl := shortcut["whitelist"]) and isinstance(
+                if (wl := shortcut.whitelist) and isinstance(
                     event, GroupMessageEvent
                 ):
                     return event.group_id in wl
                 return True
 
-            on_regex(shortcut["regex"], rule=rule).append_handler(
-                get_shortcut_handler(shortcut["host"], shortcut["type"])
+            on_regex(shortcut.regex, rule=rule).append_handler(
+                get_shortcut_handler(shortcut.host, shortcut.type)
             )
 
 
