@@ -42,9 +42,7 @@ def startup():
         for shortcut in s:
 
             async def rule(event: MessageEvent):
-                if (wl := shortcut.whitelist) and isinstance(
-                    event, GroupMessageEvent
-                ):
+                if (wl := shortcut.whitelist) and isinstance(event, GroupMessageEvent):
                     return event.group_id in wl
                 return True
 
