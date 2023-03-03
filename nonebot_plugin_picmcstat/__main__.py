@@ -6,7 +6,7 @@ from nonebot.internal.adapter import Message
 from nonebot.matcher import Matcher
 from nonebot.params import CommandArg
 
-from .config import config
+from .config import config, ShortcutType
 from .draw import ServerType, draw  # noqa
 
 motd_handler = on_command("motd", aliases={"!motd", "！motd"})
@@ -37,18 +37,21 @@ def get_shortcut_handler(
     return shortcut_handler
 
 
+def append_shortcut_handler(shortcut: ShortcutType):
+    async def rule(event: MessageEvent):
+        if (wl := shortcut.whitelist) and isinstance(event, GroupMessageEvent):
+            return event.group_id in wl
+        return True
+
+    on_regex(shortcut.regex, rule=rule).append_handler(
+        get_shortcut_handler(shortcut.host, shortcut.type)
+    )
+
+
 def startup():
     if s := config.mcstat_shortcuts:
-        for shortcut in s:
-
-            async def rule(event: MessageEvent):
-                if (wl := shortcut.whitelist) and isinstance(event, GroupMessageEvent):
-                    return event.group_id in wl
-                return True
-
-            on_regex(shortcut.regex, rule=rule).append_handler(
-                get_shortcut_handler(shortcut.host, shortcut.type)
-            )
+        for v in s:
+            append_shortcut_handler(v)
 
 
 startup()
