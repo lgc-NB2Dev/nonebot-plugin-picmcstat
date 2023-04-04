@@ -1,9 +1,8 @@
-import json as JSON
+import json
 import random
 import re
-
-from string import ascii_letters, digits, punctuation
-from typing import List, Optional, TypedDict, Union
+from contextlib import suppress
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from .const import (
     CODE_COLOR,
@@ -13,7 +12,13 @@ from .const import (
     STYLE_BBCODE,
 )
 
-RANDOM_CHAR_TEMPLATE = ascii_letters + digits + punctuation
+if TYPE_CHECKING:
+    from mcstatus.pinger import RawResponseDescription, RawResponseDescriptionWhenDict
+
+
+RANDOM_CHAR_TEMPLATE = (
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!§$%&?#"
+)
 
 
 def get_latency_color(delay: Union[int, float]) -> str:
@@ -86,7 +91,10 @@ def format_code_to_bbcode(text: str) -> str:
 
 
 def format_list(
-    sample: List[str], items_per_line=2, line_start_spaces=10, list_gap=2
+    sample: List[str],
+    items_per_line=2,
+    line_start_spaces=10,
+    list_gap=2,
 ) -> str:
     sample = [x for x in sample if x]
     if not sample:
@@ -112,50 +120,37 @@ def format_list(
     return "".join(tmp).strip()
 
 
-class RawTextDictType(TypedDict):
-    text: str
-    color: Optional[str]
-    bold: Optional[bool]
-    italic: Optional[bool]
-    underlined: Optional[bool]
-    strikethrough: Optional[bool]
-    obfuscated: Optional[bool]  # &k random
-    interpret: Optional[bool]  # `text` need parse
-    extra: List["RawTextType"]
-
-
-RawTextType = Union[str, RawTextDictType, List[RawTextDictType]]
-
-
-def get_format_code_by_dict(json: RawTextDictType) -> list:
+def get_format_code_by_dict(json: "RawResponseDescriptionWhenDict") -> list:
     codes = []
     if color := json.get("color"):
         codes.append(f"§{STRING_CODE[color]}")
 
     for k in ["bold", "italic", "underlined", "strikethrough", "obfuscated"]:
-        if json.get(k):  # type: ignore
+        if json.get(k):
             codes.append(f"§{STRING_CODE[k]}")
     return codes
 
 
-def json_to_format_code(json: RawTextType, interpret: Optional[bool] = None) -> str:
-    if isinstance(json, str):
-        return json
-    if isinstance(json, list):
-        return "§r".join([json_to_format_code(x, interpret) for x in json])
+def json_to_format_code(
+    raw_json: "RawResponseDescription",
+    interpret: Optional[bool] = None,
+) -> str:
+    if isinstance(raw_json, str):
+        return raw_json
+    if isinstance(raw_json, list):
+        return "§r".join([json_to_format_code(x, interpret) for x in raw_json])
 
-    interpret = interpret if (i := json.get("interpret")) is None else i
-    code = "".join(get_format_code_by_dict(json))
+    interpret = interpret if (i := raw_json.get("interpret")) is None else i
+    code = "".join(get_format_code_by_dict(raw_json))
     texts = []
-    for k, v in json.items():
-        if k == "text":
-            if interpret:
-                try:
-                    v = json_to_format_code(JSON.loads(v), interpret)  # type: ignore
-                except:
-                    pass
-            texts.append(v)
-        if k == "extra":
-            texts.append(json_to_format_code(v, interpret))  # type: ignore
+
+    if text := raw_json.get("text"):
+        if interpret:
+            with suppress(Exception):
+                text = json_to_format_code(json.loads(text), interpret)
+        texts.append(text)
+
+    if extra := raw_json.get("extra"):
+        texts.append(json_to_format_code(extra, interpret))
 
     return f"{code}{''.join(texts)}"

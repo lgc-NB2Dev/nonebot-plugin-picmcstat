@@ -67,9 +67,9 @@ STRING_CODE = {
 
 STYLE_BBCODE = {
     "l": ["[b]", "[/b]"],
-    "m": ["", ""],  # 不支持
-    "n": ["", ""],  # 不支持
-    "o": ["", ""],  # 不支持
+    "m": ["[del]", "[/del]"],
+    "n": ["[u]", "[/u]"],
+    "o": ["[i]", "[/i]"],
 }
 
 GAME_MODE_MAP = {"Survival": "生存", "Creative": "创造", "Adventure": "冒险"}

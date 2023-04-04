@@ -34,9 +34,6 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
 插件包体内并没有自带图片内 Unifont 字体，需要的话请参考 [这里](#字体) 安装字体
 
-因为下划线、删除线和斜体 [`nonebot-plugin-imageutils`](https://github.com/noneplugin/nonebot-plugin-imageutils) 的 bbcode 还不支持，所以还没做  
-（如果 wq 佬看到这个能不能酌情考虑一下呢 awa）
-
 <details open>
 <summary>效果图</summary>
 
@@ -49,11 +46,15 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
 ### 插件
 
+以下提到的方法 任选**其一** 即可
+
 <details open>
 <summary>[推荐] 使用 nb-cli 安装</summary>
 在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
 
-    nb plugin install nonebot-plugin-picmcstat
+```bash
+nb plugin install nonebot-plugin-picmcstat
+```
 
 </details>
 
@@ -64,31 +65,45 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 <details>
 <summary>pip</summary>
 
-    pip install nonebot-plugin-picmcstat
+```bash
+pip install nonebot-plugin-picmcstat
+```
 
 </details>
 <details>
 <summary>pdm</summary>
 
-    pdm add nonebot-plugin-picmcstat
+```bash
+pdm add nonebot-plugin-picmcstat
+```
 
 </details>
 <details>
 <summary>poetry</summary>
 
-    poetry add nonebot-plugin-picmcstat
+```bash
+poetry add nonebot-plugin-picmcstat
+```
 
 </details>
 <details>
 <summary>conda</summary>
 
-    conda install nonebot-plugin-picmcstat
+```bash
+conda install nonebot-plugin-picmcstat
+```
 
 </details>
 
-打开 nonebot2 项目的 `bot.py` 文件, 在其中写入
+打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分的 `plugins` 项里追加写入
 
-    nonebot.load_plugin('nonebot_plugin_picmcstat')
+```toml
+[tool.nonebot]
+plugins = [
+    # ...
+    "nonebot_plugin_picmcstat"
+]
+```
 
 </details>
 
@@ -96,10 +111,8 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
 字体文件请自行去自行去 [这里](http://ftp.gnu.org/gnu/unifont/unifont-15.0.01/unifont-15.0.01.ttf) 下载
 
-有两种方式可以安装该字体
-
-- 方式一：直接安装在系统中
-- 方式二：放在 `nonebot-plugin-imageutils` 插件的字体文件目录中并将文件重命名为 `unifont` 即可使用，该插件配置可以参考 [这里](https://github.com/noneplugin/nonebot-plugin-imageutils#%E9%85%8D%E7%BD%AE%E5%AD%97%E4%BD%93)
+直接安装在系统中，之后重启 NoneBot2 即可  
+如果还是没用，请右键字体文件选择 `为所有用户安装`
 
 ## ⚙️ 配置
 
@@ -119,7 +132,9 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
 最终的配置项看起来是这样子的，当你发送 `查服` 时，机器人会把 EaseCation 服务器的状态发送出来
 
-    MCSTAT_SHORTCUTS=[{"regex":"^查服$","host":"asia.easecation.net","type":"be"}]
+```env
+MCSTAT_SHORTCUTS=[{"regex":"^查服$","host":"asia.easecation.net","type":"be"}]
+```
 
 ## 🎉 使用
 
@@ -136,9 +151,9 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 
 ## 💡 鸣谢
 
-### [nonebot-plugin-imageutils](https://github.com/noneplugin/nonebot-plugin-imageutils)
+### [pil-utils](https://github.com/MeetWq/pil-utils)
 
-- 超好用的 Pillow 辅助库，快去用 awa
+超好用的 Pillow 辅助库，wq 佬是叠！快去用 awa
 
 ## 💰 赞助
 
@@ -153,6 +168,11 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
   </details>
 
 ## 📝 更新日志
+
+### 0.3.0
+
+- 弃用 `nonebot-plugin-imageutils`，换用 `pil-utils`
+- 支持了更多字体样式
 
 ### 0.2.7
 

@@ -6,8 +6,8 @@ from nonebot.internal.adapter import Message
 from nonebot.matcher import Matcher
 from nonebot.params import CommandArg
 
-from .config import config, ShortcutType
-from .draw import ServerType, draw  # noqa
+from .config import ShortcutType, config
+from .draw import ServerType, draw
 
 motd_handler = on_command("motd", aliases={"!motd", "！motd"})
 
@@ -29,7 +29,8 @@ async def _(matcher: Matcher, msg_arg: Message = CommandArg()):
 
 
 def get_shortcut_handler(
-    host: str, svr_type: ServerType
+    host: str,
+    svr_type: ServerType,
 ) -> Callable[..., Awaitable[NoReturn]]:
     async def shortcut_handler(matcher: Matcher):
         await matcher.finish(await draw(host, svr_type))
@@ -44,7 +45,7 @@ def append_shortcut_handler(shortcut: ShortcutType):
         return True
 
     on_regex(shortcut.regex, rule=rule).append_handler(
-        get_shortcut_handler(shortcut.host, shortcut.type)
+        get_shortcut_handler(shortcut.host, shortcut.type),
     )
 
 

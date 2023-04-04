@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from nonebot_plugin_imageutils import BuildImage
+from pil_utils import BuildImage
 
 MODULE_DIR = Path(__file__).parent
 RES_DIR = MODULE_DIR / "res"

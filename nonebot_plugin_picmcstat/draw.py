@@ -4,14 +4,14 @@ from asyncio.exceptions import TimeoutError
 from io import BytesIO
 from typing import Optional, Union
 
-from PIL.Image import Resampling
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.bedrock_status import BedrockStatusResponse
 from mcstatus.pinger import PingResponse
 from nonebot import get_driver
-from nonebot.log import logger
 from nonebot.adapters.onebot.v11 import MessageSegment
-from nonebot_plugin_imageutils import BuildImage, Text2Image
+from nonebot.log import logger
+from PIL.Image import Resampling
+from pil_utils import BuildImage, Text2Image
 
 from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
 from .res import DEFAULT_ICON_RES, DIRT_RES, GRASS_RES
@@ -61,61 +61,63 @@ def build_img(
     if not icon:
         icon = DEFAULT_ICON_RES
 
-    HEADER_TEXT_COLOR = CODE_COLOR["f"]
-    HEADER_STROKE_COLOR = STROKE_COLOR["f"]
+    header_text_color = CODE_COLOR["f"]
+    header_stroke_color = STROKE_COLOR["f"]
 
-    HEADER_HEIGHT = 128
-    HALF_HEADER_HEIGHT = int(HEADER_HEIGHT / 2)
+    header_height = 128
+    half_header_height = int(header_height / 2)
 
-    BG_WIDTH = extra.width + MARGIN * 2 if extra else MIN_WIDTH
-    BG_HEIGHT = HEADER_HEIGHT + MARGIN * 2
-    if BG_WIDTH < MIN_WIDTH:
-        BG_WIDTH = MIN_WIDTH
+    bg_width = extra.width + MARGIN * 2 if extra else MIN_WIDTH
+    bg_height = header_height + MARGIN * 2
+    if bg_width < MIN_WIDTH:
+        bg_width = MIN_WIDTH
     if extra:
-        BG_HEIGHT += extra.height + int(MARGIN / 2)
-    bg = draw_bg(BG_WIDTH, BG_HEIGHT)
+        bg_height += extra.height + int(MARGIN / 2)
+    bg = draw_bg(bg_width, bg_height)
 
-    if icon.size != (HEADER_HEIGHT, HEADER_HEIGHT):
+    if icon.size != (header_height, header_height):
         icon = icon.resize_height(
-            HEADER_HEIGHT, inside=False, resample=Resampling.NEAREST
+            header_height,
+            inside=False,
+            resample=Resampling.NEAREST,
         )
     bg.paste(icon, (MARGIN, MARGIN), alpha=True)
 
     bg.draw_text(
         (
-            HEADER_HEIGHT + MARGIN + MARGIN / 2,
+            header_height + MARGIN + MARGIN / 2,
             MARGIN - 4,
-            BG_WIDTH - MARGIN,
-            HALF_HEADER_HEIGHT + MARGIN + 4,
+            bg_width - MARGIN,
+            half_header_height + MARGIN + 4,
         ),
         header1,
         halign="left",
-        fill=HEADER_TEXT_COLOR,
+        fill=header_text_color,
         max_fontsize=TITLE_FONT_SIZE,
         fontname=FONT_NAME,
         stroke_ratio=STROKE_RATIO,
-        stroke_fill=HEADER_STROKE_COLOR,
+        stroke_fill=header_stroke_color,
     )
     bg.draw_text(
         (
-            HEADER_HEIGHT + MARGIN + MARGIN / 2,
-            HALF_HEADER_HEIGHT + MARGIN - 4,
-            BG_WIDTH - MARGIN,
-            HEADER_HEIGHT + MARGIN + 4,
+            header_height + MARGIN + MARGIN / 2,
+            half_header_height + MARGIN - 4,
+            bg_width - MARGIN,
+            header_height + MARGIN + 4,
         ),
         header2,
         halign="left",
-        fill=HEADER_TEXT_COLOR,
+        fill=header_text_color,
         max_fontsize=TITLE_FONT_SIZE,
         fontname=FONT_NAME,
         stroke_ratio=STROKE_RATIO,
-        stroke_fill=HEADER_STROKE_COLOR,
+        stroke_fill=header_stroke_color,
     )
 
     if extra:
         extra.draw_on_image(
             bg.image,
-            (MARGIN, int(HEADER_HEIGHT + MARGIN + MARGIN / 2)),
+            (MARGIN, int(header_height + MARGIN + MARGIN / 2)),
         )
 
     return bg.convert("RGB").save("PNG")
@@ -151,7 +153,7 @@ def draw_java(res: PingResponse) -> BytesIO:
     online_percent = (
         "{:.2f}".format(players_online / players_max * 100) if players_max else "?.??"
     )
-    motd = strip_lines(json_to_format_code(res.raw["description"]))  # type: ignore
+    motd = strip_lines(json_to_format_code(res.raw["description"]))
 
     player_li = ""
     if res.players.sample:
@@ -167,7 +169,7 @@ def draw_java(res: PingResponse) -> BytesIO:
 
         if tmp := mod_info.get("modList"):
             mod_total = f"§7Mod总数: §f{len(tmp)}\n"
-            mod_list = f"§7Mod列表: §f{format_list(tmp)}\n"  # type: ignore
+            mod_list = f"§7Mod列表: §f{format_list(tmp)}\n"
 
     extra_txt = (
         f"{motd}§r\n"
@@ -227,7 +229,7 @@ def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
 
 async def draw(ip: str, svr_type: ServerType) -> Union[MessageSegment, str]:
     if svr_type not in ("je", "be"):
-        raise ValueError("Server type must be `je` or `be`")
+        raise ValueError("Server type must be `je` or `be`")  # noqa: TRY003
 
     try:
         if not ip:
@@ -235,12 +237,12 @@ async def draw(ip: str, svr_type: ServerType) -> Union[MessageSegment, str]:
 
         if svr_type == "je":
             return MessageSegment.image(
-                draw_java(await (await JavaServer.async_lookup(ip)).async_status())
+                draw_java(await (await JavaServer.async_lookup(ip)).async_status()),
             )
-        else:  # be
-            return MessageSegment.image(
-                draw_bedrock(await BedrockServer.lookup(ip).async_status())
-            )
+
+        return MessageSegment.image(
+            draw_bedrock(await BedrockServer.lookup(ip).async_status()),
+        )
     except Exception as e:
         logger.exception("获取服务器状态/画服务器状态图出错")
         try:

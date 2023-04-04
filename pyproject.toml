@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-picmcstat"
-version = "0.2.7"
+version = "0.3.0"
 description = "A NoneBot2 plugin generates a pic from a Minecraft server's MOTD"
 authors = [{ name = "student_2333", email = "lgc2333@126.com" }]
 dependencies = [
@@ -17,7 +17,14 @@ license = { text = "MIT" }
 [project.urls]
 
 [project.optional-dependencies]
-dev = ["black>=23.3.0", "ruff>=0.0.260", "isort>=5.12.0"]
+dev = [
+    "pip>=23.0.1",
+    "setuptools>=67.6.1",
+    "black>=23.3.0",
+    "ruff>=0.0.260",
+    "isort>=5.12.0",
+    "nb-cli>=1.0.5",
+]
 
 [tool.pdm.build]
 includes = []
@@ -28,7 +35,16 @@ build-backend = "pdm.pep517.api"
 
 [tool.ruff]
 extend-exclude = []
-ignore = ["E501", "E722", "TRY002", "RUF001", "RUF002", "RUF003", "RUF100"]
+ignore = [
+    "E501",
+    "E722",
+    "B008",
+    "TRY002",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "RUF100",
+]
 select = [
     "F",
     "E",
