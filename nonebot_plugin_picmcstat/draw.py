@@ -13,6 +13,7 @@ from nonebot.log import logger
 from PIL.Image import Resampling
 from pil_utils import BuildImage, Text2Image
 
+from .config import config
 from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
 from .res import DEFAULT_ICON_RES, DIRT_RES, GRASS_RES
 from .util import (
@@ -25,7 +26,6 @@ from .util import (
 
 MARGIN = 32
 MIN_WIDTH = 512
-FONT_NAME = "unifont"
 TITLE_FONT_SIZE = 8 * 5
 EXTRA_FONT_SIZE = 8 * 4
 EXTRA_STROKE_WIDTH = 2
@@ -94,7 +94,7 @@ def build_img(
         halign="left",
         fill=header_text_color,
         max_fontsize=TITLE_FONT_SIZE,
-        fontname=FONT_NAME,
+        fontname=config.mcstat_font,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=header_stroke_color,
     )
@@ -109,7 +109,7 @@ def build_img(
         halign="left",
         fill=header_text_color,
         max_fontsize=TITLE_FONT_SIZE,
-        fontname=FONT_NAME,
+        fontname=config.mcstat_font,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=header_stroke_color,
     )
@@ -128,7 +128,7 @@ def format_extra(extra: str) -> Text2Image:
         format_code_to_bbcode(extra),
         EXTRA_FONT_SIZE,
         fill=CODE_COLOR["f"],
-        fontname=FONT_NAME,
+        fontname=config.mcstat_font,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=STROKE_COLOR["f"],
         spacing=EXTRA_SPACING,

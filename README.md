@@ -111,10 +111,17 @@ plugins = [
 
 字体文件请自行去自行去 [这里](http://ftp.gnu.org/gnu/unifont/unifont-15.0.01/unifont-15.0.01.ttf) 下载
 
-直接安装在系统中，之后重启 NoneBot2 即可  
-如果还是没用，请右键字体文件选择 `为所有用户安装`
+将字体文件直接安装在系统中即可  
+如果不行，请尝试右键字体文件点击 `为所有用户安装`  
+如果还是不行，请尝试修改插件字体配置
 
 ## ⚙️ 配置
+
+### `MCSTAT_FONT` - 使用的字体名称 / 路径
+
+默认：`unifont-15.0.01.ttf`
+
+请按需自行更改
 
 ### `MCSTAT_SHORTCUTS` - 快捷指令列表
 
@@ -173,6 +180,7 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 
 - 弃用 `nonebot-plugin-imageutils`，换用 `pil-utils`
 - 支持了更多字体样式
+- 支持自定义字体
 
 ### 0.2.7
 
