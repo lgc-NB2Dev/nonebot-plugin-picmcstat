@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD033 MD036 MD041 -->
 
 <div align="center">
-  <a href="https://v2.nonebot.dev/store"><img src="readme/picmcstat.png" width="180" height="180" alt="NoneBotPluginLogo"></a>
+  <a href="https://v2.nonebot.dev/store"><img src="https://media.githubusercontent.com/media/lgc-NB2Dev/readme/main/picmcstat/picmcstat.png" width="180" height="180" alt="NoneBotPluginLogo"></a>
   <br>
   <p><img src="https://raw.githubusercontent.com/A-kirami/nonebot-plugin-template/resources/NoneBotPlugin.svg" width="240" alt="NoneBotPluginText"></p>
 </div>
@@ -37,8 +37,8 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 <details open>
 <summary>效果图</summary>
 
-![example](readme/example.png)  
-![example](readme/example_je.png)
+![example](https://media.githubusercontent.com/media/lgc-NB2Dev/readme/main/picmcstat/example.png)  
+![example](https://media.githubusercontent.com/media/lgc-NB2Dev/readme/main/picmcstat/example_je.png)
 
 </details>
 
@@ -147,7 +147,7 @@ MCSTAT_SHORTCUTS=[{"regex":"^查服$","host":"asia.easecation.net","type":"be"}]
 
 发送 `motd` 指令 查看使用指南
 
-![usage](readme/usage.png)
+![usage](https://media.githubusercontent.com/media/lgc-NB2Dev/readme/main/picmcstat/usage.png)
 
 ## 📞 联系
 
