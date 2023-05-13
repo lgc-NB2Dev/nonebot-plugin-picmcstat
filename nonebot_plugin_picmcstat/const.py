@@ -63,6 +63,7 @@ STRING_CODE = {
     "italic": "o",
     "underlined": "n",
     "strikethrough": "m",
+    "obfuscated": "k",
 }
 
 STYLE_BBCODE = {
