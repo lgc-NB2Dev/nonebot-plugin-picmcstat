@@ -1,11 +1,11 @@
 [project]
 name = "nonebot-plugin-picmcstat"
-version = "0.3.1"
+version = "0.3.2"
 description = "A NoneBot2 plugin generates a pic from a Minecraft server's MOTD"
 authors = [{ name = "student_2333", email = "lgc2333@126.com" }]
 dependencies = [
     "mcstatus<11.0.0,>=10.0.1",
-    "nonebot2<3.0.0,>=2.0.0rc2",
+    "nonebot2<3.0.0,>=2.0.0",
     "nonebot-adapter-onebot<3.0.0,>=2.2.0",
     "pydantic<2.0.0,>=1.10.4",
     "pil-utils>=0.1.6",
@@ -15,58 +15,11 @@ readme = "README.md"
 license = { text = "MIT" }
 
 [project.urls]
-
-[project.optional-dependencies]
-dev = [
-    "pip>=23.0.1",
-    "setuptools>=67.6.1",
-    "black>=23.3.0",
-    "ruff>=0.0.260",
-    "isort>=5.12.0",
-    "nb-cli>=1.0.5",
-]
+homepage = "https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat"
 
 [tool.pdm.build]
 includes = []
 
 [build-system]
-requires = ["pdm-pep517>=1.0.0"]
-build-backend = "pdm.pep517.api"
-
-[tool.ruff]
-extend-exclude = []
-ignore = [
-    "E501",
-    "E722",
-    "B008",
-    "TRY002",
-    "RUF001",
-    "RUF002",
-    "RUF003",
-    "RUF100",
-]
-select = [
-    "F",
-    "E",
-    "I",
-    "N",
-    "B",
-    "A",
-    "COM",
-    "C4",
-    "DTZ",
-    "ISC",
-    "PIE",
-    "PYI",
-    "Q",
-    "RSE",
-    "RET",
-    "SLF",
-    "SIM",
-    "TID",
-    "ARG",
-    "PTH",
-    "PGH",
-    "TRY",
-    "RUF",
-]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
