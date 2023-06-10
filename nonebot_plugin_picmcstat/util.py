@@ -90,36 +90,6 @@ def format_code_to_bbcode(text: str) -> str:
     return "".join(parsed)
 
 
-def format_list(
-    sample: List[str],
-    items_per_line=2,
-    line_start_spaces=10,
-    list_gap=2,
-) -> str:
-    sample = [x for x in sample if x]
-    if not sample:
-        return ""
-
-    max_width = max([len(replace_format_code(x)) for x in sample]) + list_gap
-
-    line_added = 0
-    tmp = []
-    for name in sample:
-        if line_added < items_per_line:
-            code_len = len(name) - len(replace_format_code(name))
-            name = name.ljust(max_width + code_len)
-
-        tmp.append(name)
-        line_added += 1
-
-        if line_added >= items_per_line:
-            tmp.append("\n")
-            tmp.append(" " * line_start_spaces)
-            line_added = 0
-
-    return "".join(tmp).strip()
-
-
 def get_format_code_by_dict(json: "RawResponseDescriptionWhenDict") -> list:
     codes = []
     if color := json.get("color"):

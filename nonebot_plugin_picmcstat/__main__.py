@@ -2,27 +2,26 @@ from typing import Awaitable, Callable, NoReturn
 
 from nonebot import on_command, on_regex
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent
-from nonebot.internal.adapter import Message
 from nonebot.matcher import Matcher
-from nonebot.params import CommandArg
+from nonebot.params import RawCommand
 
 from .config import ShortcutType, config
 from .draw import ServerType, draw
+
+BE_SVR_PREFIX = ["pe", "be"]
+
 
 motd_handler = on_command("motd", aliases={"!motd", "！motd"})
 
 
 @motd_handler.handle()
-async def _(matcher: Matcher, msg_arg: Message = CommandArg()):
-    arg: str = msg_arg.extract_plain_text()
+async def _(matcher: Matcher, event: MessageEvent, cmd: str = RawCommand()):
+    arg = event.get_plaintext().lstrip().replace(cmd, "", 1)
 
     svr_type: ServerType = "je"
-    be_svr_prefix = ["pe", "be"]
-    for p in be_svr_prefix:
-        if arg.startswith(p):
-            arg = arg.replace(p, "", 1)
-            svr_type = "be"
-            break
+    if p := next((p for p in BE_SVR_PREFIX if arg.startswith(p)), None):
+        arg = arg.replace(p, "", 1)
+        svr_type = "be"
 
     arg = arg.strip()
     await matcher.finish(await draw(arg, svr_type))

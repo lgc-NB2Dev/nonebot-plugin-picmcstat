@@ -119,9 +119,13 @@ plugins = [
 
 ### `MCSTAT_FONT` - 使用的字体名称 / 路径
 
-默认：`unifont-15.0.01.ttf`
+默认：`unifont`
 
 请按需自行更改
+
+### `MCSTAT_SHOW_ADDR` - 是否在生成的图片中显示服务器地址
+
+默认：`False`
 
 ### `MCSTAT_SHORTCUTS` - 快捷指令列表
 
@@ -175,6 +179,19 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
   </details>
 
 ## 📝 更新日志
+
+### 0.3.3
+
+- 修复特殊情况下玩家列表排版错误的问题
+- 添加显示服务器地址的配置项 (`MCSTAT_SHOW_ADDR`)
+
+### 0.3.2
+
+- 🎉 NoneBot 2.0 🚀
+
+### 0.3.1
+
+- 修复文本内含有 `§k` 时报错的问题
 
 ### 0.3.0
 
