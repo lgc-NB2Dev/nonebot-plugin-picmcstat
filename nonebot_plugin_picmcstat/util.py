@@ -41,8 +41,7 @@ def strip_lines(txt: str) -> str:
 
     txt = "\n".join([x.strip() for x in txt.splitlines()])
     txt = re.sub(head_space_regex, r"\1", txt)
-    txt = re.sub(tail_space_regex, r"\1", txt)
-    return txt
+    return re.sub(tail_space_regex, r"\1", txt)
 
 
 def replace_format_code(txt: str, new_str: str = "") -> str:

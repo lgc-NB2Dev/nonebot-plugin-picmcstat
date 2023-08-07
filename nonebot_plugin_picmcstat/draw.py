@@ -326,6 +326,6 @@ async def draw(ip: str, svr_type: ServerType) -> Union[MessageSegment, str]:
         logger.exception("获取服务器状态/画服务器状态图出错")
         try:
             return MessageSegment.image(draw_error(e, svr_type))
-        except:
+        except Exception:
             logger.exception("画异常状态图失败")
             return "出现未知错误，请检查后台输出"
