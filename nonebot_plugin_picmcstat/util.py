@@ -2,7 +2,7 @@ import json
 import random
 import re
 from contextlib import suppress
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from .const import (
     CODE_COLOR,
@@ -123,3 +123,15 @@ def json_to_format_code(
         texts.append(json_to_format_code(extra, interpret))
 
     return f"{code}{''.join(texts)}"
+
+
+def format_mod_list(li: List[Union[Dict, str]]) -> List[str]:
+    def mapping_func(it: Union[Dict, str]) -> Optional[str]:
+        if isinstance(it, str):
+            return it
+        if isinstance(it, dict) and (name := it.get("modid")):
+            version = it.get("version")
+            return f"{name}-{version}" if version else name
+        return None
+
+    return sorted((x for x in map(mapping_func, li) if x) ,key=lambda x: x.lower())

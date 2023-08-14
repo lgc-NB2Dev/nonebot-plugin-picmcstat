@@ -19,6 +19,7 @@ from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
 from .res import DEFAULT_ICON_RES, DIRT_RES, GRASS_RES
 from .util import (
     format_code_to_bbcode,
+    format_mod_list,
     get_latency_color,
     json_to_format_code,
     strip_lines,
@@ -234,7 +235,7 @@ def draw_java(res: PingResponse, addr: str) -> BytesIO:
         if tmp := mod_info.get("type"):
             mod_client = f"§7Mod端类型: §f{tmp}\n"
 
-        if tmp := mod_info.get("modList"):
+        if config.mcstat_show_mods and (tmp := mod_info.get("modList")):
             mod_total = f"§7Mod总数: §f{len(tmp)}\n"
             mod_list = tmp
 
@@ -250,7 +251,7 @@ def draw_java(res: PingResponse, addr: str) -> BytesIO:
     )
 
     extras: List[Union[Text2Image, BuildImage]] = [format_extra(extra_txt)]
-    if mod_list and (li := format_list("§7Mod列表: ", mod_list)):
+    if mod_list and (li := format_list("§7Mod列表: ", format_mod_list(mod_list))):
         extras.append(li)
     if player_li and (li := format_list("§7玩家列表: ", player_li)):
         extras.append(li)

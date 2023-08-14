@@ -16,6 +16,7 @@ class ShortcutType(BaseModel):
 class ConfigClass(BaseModel):
     mcstat_font: str = "unifont"
     mcstat_show_addr: bool = False
+    mcstat_show_mods: bool = False
     mcstat_shortcuts: Optional[List[ShortcutType]] = []
 
 
