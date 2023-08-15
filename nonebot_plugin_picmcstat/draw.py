@@ -235,9 +235,10 @@ def draw_java(res: PingResponse, addr: str) -> BytesIO:
         if tmp := mod_info.get("type"):
             mod_client = f"§7Mod端类型: §f{tmp}\n"
 
-        if config.mcstat_show_mods and (tmp := mod_info.get("modList")):
+        if tmp := mod_info.get("modList"):
             mod_total = f"§7Mod总数: §f{len(tmp)}\n"
-            mod_list = tmp
+            if config.mcstat_show_mods:
+                mod_list = tmp
 
     extra_txt = (
         f"{motd}§r\n"
