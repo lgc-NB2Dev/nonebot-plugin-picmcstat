@@ -316,16 +316,17 @@ async def draw(ip: str, svr_type: ServerType) -> Union[BytesIO, str]:
         if not ip:
             return draw_help(svr_type)
 
-        if svr_type == "je":
-            return draw_java(
-                await (await JavaServer.async_lookup(format_ip(ip))).async_status(),
-                ip,
-            )
+        original_ip = ip
+        ip = format_ip(ip)
 
-        return draw_bedrock(
-            await BedrockServer.lookup(format_ip(ip)).async_status(),
-            ip,
-        )
+        if svr_type == "je":
+            server = await JavaServer.async_lookup(ip)
+            status = await server.async_status()
+            return draw_java(status, original_ip)
+
+        # else:
+        status = await BedrockServer.lookup(ip).async_status()
+        return draw_bedrock(status, original_ip)
 
     except Exception as e:
         logger.exception("获取服务器状态/画服务器状态图出错")
