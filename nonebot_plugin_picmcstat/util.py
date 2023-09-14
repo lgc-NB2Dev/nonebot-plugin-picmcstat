@@ -137,7 +137,7 @@ def format_mod_list(li: List[Union[Dict, str]]) -> List[str]:
 
     return sorted((x for x in map(mapping_func, li) if x) ,key=lambda x: x.lower())
 
-def format_url(ip: str) -> str:
+def format_ip(ip: str) -> str:
     ip_parts = ip.split(":")
     domain = ip_parts[0]
     domain_punycode = punycode.convert(domain)
