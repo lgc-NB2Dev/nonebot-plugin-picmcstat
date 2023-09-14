@@ -1,9 +1,10 @@
 import json
 import random
 import re
-import punycode
 from contextlib import suppress
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
+
+import punycode
 
 from .const import (
     CODE_COLOR,
@@ -141,8 +142,5 @@ def format_ip(ip: str) -> str:
     ip_parts = ip.split(":")
     domain = ip_parts[0]
     domain_punycode = punycode.convert(domain)
-    if len(ip_parts) > 1:
-        port = ':' + ip_parts[1]
-    else:
-        port = ''
+    port = ":" + ip_parts[1] if len(ip_parts) > 1 else ""
     return domain_punycode + port

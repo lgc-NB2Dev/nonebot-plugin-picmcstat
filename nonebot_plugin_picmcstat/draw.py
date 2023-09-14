@@ -9,7 +9,6 @@ from mcstatus import BedrockServer, JavaServer
 from mcstatus.bedrock_status import BedrockStatusResponse
 from mcstatus.pinger import PingResponse
 from nonebot import get_driver
-from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot.log import logger
 from PIL.Image import Resampling
 from pil_utils import BuildImage, Text2Image
@@ -19,11 +18,11 @@ from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
 from .res import DEFAULT_ICON_RES, DIRT_RES, GRASS_RES
 from .util import (
     format_code_to_bbcode,
+    format_ip,
     format_mod_list,
     get_latency_color,
     json_to_format_code,
     strip_lines,
-    format_ip,
 )
 
 MARGIN = 32
@@ -309,26 +308,29 @@ def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
     )
 
 
-async def draw(ip: str, svr_type: ServerType) -> Union[MessageSegment, str]:
+async def draw(ip: str, svr_type: ServerType) -> Union[BytesIO, str]:
     if svr_type not in ("je", "be"):
         raise ValueError("Server type must be `je` or `be`")  # noqa: TRY003
 
     try:
         if not ip:
-            return MessageSegment.image(draw_help(svr_type))
+            return draw_help(svr_type)
 
         if svr_type == "je":
-            return MessageSegment.image(
-                draw_java(await (await JavaServer.async_lookup(format_ip(ip))).async_status(), ip),
+            return draw_java(
+                await (await JavaServer.async_lookup(format_ip(ip))).async_status(),
+                ip,
             )
 
-        return MessageSegment.image(
-            draw_bedrock(await BedrockServer.lookup(format_ip(ip)).async_status(), ip),
+        return draw_bedrock(
+            await BedrockServer.lookup(format_ip(ip)).async_status(),
+            ip,
         )
+
     except Exception as e:
         logger.exception("获取服务器状态/画服务器状态图出错")
         try:
-            return MessageSegment.image(draw_error(e, svr_type))
+            return draw_error(e, svr_type)
         except Exception:
             logger.exception("画异常状态图失败")
             return "出现未知错误，请检查后台输出"

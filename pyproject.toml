@@ -1,15 +1,16 @@
 [project]
 name = "nonebot-plugin-picmcstat"
-version = "0.3.5"
+version = "0.4.0"
 description = "A NoneBot2 plugin generates a pic from a Minecraft server's MOTD"
 authors = [{ name = "student_2333", email = "lgc2333@126.com" }]
 dependencies = [
-    "mcstatus<11.0.0,>=10.0.1",
-    "nonebot2<3.0.0,>=2.0.0",
-    "nonebot-adapter-onebot<3.0.0,>=2.2.0",
-    "pydantic<2.0.0,>=1.10.4",
+    "mcstatus>=10.0.1",
+    "nonebot2>=2.0.0",
+    "nonebot-adapter-onebot>=2.2.0",
+    "pydantic>=1.10.4",
     "pil-utils>=0.1.6",
     "punycode>=0.2.1",
+    "nonebot-plugin-send-anything-anywhere>=0.3.0",
 ]
 requires-python = ">=3.8,<4.0"
 readme = "README.md"

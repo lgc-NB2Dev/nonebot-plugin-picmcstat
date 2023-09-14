@@ -133,9 +133,13 @@ plugins = [
 
 由于某些整合包服务器的 Mod 数量过多，导致图片生成时间过长，且容易炸内存，所以默认不显示
 
+### `MCSTAT_REPLY_TARGET` - 是否回复指令发送者
+
+默认：`True`
+
 ### `MCSTAT_SHORTCUTS` - 快捷指令列表
 
-这个配置项能够帮助你简化一些查询指令
+这个配置项能够帮助你简化一些查询指令（仅支持 OneBot V11 适配器）
 
 此配置项的类型是一个列表，里面的元素需要为一个特定结构的字典  
 这个字典需要有三个元素
@@ -186,9 +190,15 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 
 ## 📝 更新日志
 
+### 0.4.0
+
+- 修复修复无法解析中文域名 IP 的错误（[#13](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/issues/13)）
+- 使用 SAA 支持多适配器（shortcut 依然仅支持 OB V11）
+- 添加配置项 `MCSTAT_REPLY_TARGET`
+
 ### 0.3.5
 
-- 修复无法解析中文域名 IP 的错误
+- 修复上个版本的小 Bug
 
 ### 0.3.4
 
