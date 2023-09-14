@@ -6,7 +6,7 @@ groups = ["default"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:3079ef5bdc6c5ea05a626159f8f4c2dda92511d2cf4b0b6d8b1a354dc45457f4"
+content_hash = "sha256:93f1c2d66cb5df16e5575a50e61c2cc78a4d00caf8542bcf9d1277c33176e9a8"
 
 [[package]]
 name = "asyncio-dgram"
@@ -622,6 +622,19 @@ files = [
 ]
 
 [[package]]
+name = "punycode"
+version = "0.2.1"
+summary = "Punycode Converter Library for Python"
+dependencies = [
+    "idna==3.4",
+    "wincertstore==0.2",
+]
+files = [
+    {file = "punycode-0.2.1-py3-none-any.whl", hash = "sha256:5c6c2c1fcfdcd50752fe4e68d402495d9ae2a71ac73915bc6af39cc7ccd99eb5"},
+    {file = "punycode-0.2.1.tar.gz", hash = "sha256:2619d4cc3d517f5b15f092d2e4108f37a44689514207f359ae6c5edf4fcc341d"},
+]
+
+[[package]]
 name = "pydantic"
 version = "1.10.8"
 requires_python = ">=3.7"
@@ -785,6 +798,15 @@ summary = "A small Python utility to set file creation time on Windows"
 files = [
     {file = "win32_setctime-1.1.0-py3-none-any.whl", hash = "sha256:231db239e959c2fe7eb1d7dc129f11172354f98361c4fa2d6d2d7e278baa8aad"},
     {file = "win32_setctime-1.1.0.tar.gz", hash = "sha256:15cf5750465118d6929ae4de4eb46e8edae9a5634350c01ba582df868e932cb2"},
+]
+
+[[package]]
+name = "wincertstore"
+version = "0.2"
+summary = "Python module to extract CA and CRL certs from Windows' cert store (ctypes based)."
+files = [
+    {file = "wincertstore-0.2-py2.py3-none-any.whl", hash = "sha256:22d5eebb52df88a8d4014d5cf6d1b6c3a5d469e6c3b2e2854f3a003e48872356"},
+    {file = "wincertstore-0.2.zip", hash = "sha256:780bd1557c9185c15d9f4221ea7f905cb20b93f7151ca8ccaed9714dce4b327a"},
 ]
 
 [[package]]

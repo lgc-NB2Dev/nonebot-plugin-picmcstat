@@ -23,6 +23,7 @@ from .util import (
     get_latency_color,
     json_to_format_code,
     strip_lines,
+    format_url,
 )
 
 MARGIN = 32
@@ -318,11 +319,11 @@ async def draw(ip: str, svr_type: ServerType) -> Union[MessageSegment, str]:
 
         if svr_type == "je":
             return MessageSegment.image(
-                draw_java(await (await JavaServer.async_lookup(ip)).async_status(), ip),
+                draw_java(await (await JavaServer.async_lookup(format_url(ip))).async_status(), ip),
             )
 
         return MessageSegment.image(
-            draw_bedrock(await BedrockServer.lookup(ip).async_status(), ip),
+            draw_bedrock(await BedrockServer.lookup(format_url(ip)).async_status(), ip),
         )
     except Exception as e:
         logger.exception("获取服务器状态/画服务器状态图出错")

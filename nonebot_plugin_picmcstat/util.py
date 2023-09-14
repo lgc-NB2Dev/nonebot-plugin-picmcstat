@@ -1,6 +1,7 @@
 import json
 import random
 import re
+import punycode
 from contextlib import suppress
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
@@ -135,3 +136,13 @@ def format_mod_list(li: List[Union[Dict, str]]) -> List[str]:
         return None
 
     return sorted((x for x in map(mapping_func, li) if x) ,key=lambda x: x.lower())
+
+def format_url(ip: str) -> str:
+    ip_parts = ip.split(":")
+    domain = ip_parts[0]
+    domain_punycode = punycode.convert(domain)
+    if len(ip_parts) > 1:
+        port = ':' + ip_parts[1]
+    else:
+        port = ''
+    return domain_punycode + port
