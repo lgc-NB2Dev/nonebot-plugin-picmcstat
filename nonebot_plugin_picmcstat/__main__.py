@@ -12,7 +12,7 @@ from .draw import ServerType, draw
 
 motdpe_matcher = on_command(
     "motdpe",
-    aliases={"!motdpe", "！motdpe", "!motdbe", "！motdbe"},
+    aliases={"motdbe", "!motdpe", "！motdpe", "!motdbe", "！motdbe"},
     state={"svr_type": "be"},
 )
 motd_matcher = on_command(
@@ -24,6 +24,7 @@ motd_matcher = on_command(
 
 
 @motd_matcher.handle()
+@motdpe_matcher.handle()
 async def _(state: T_State, arg_msg: Message = CommandArg()):
     arg = arg_msg.extract_plain_text().strip()
     svr_type: ServerType = state["svr_type"]
