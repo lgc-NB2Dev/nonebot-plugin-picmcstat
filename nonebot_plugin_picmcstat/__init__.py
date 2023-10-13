@@ -1,7 +1,9 @@
-from nonebot.plugin import PluginMetadata
+from nonebot.plugin import PluginMetadata, inherit_supported_adapters, require
 
-from . import __main__ as __main__
-from .config import ConfigClass
+require("nonebot_plugin_saa")
+
+from . import __main__ as __main__  # noqa: E402
+from .config import ConfigClass  # noqa: E402
 
 __version__ = "0.4.0"
 __plugin_meta__ = PluginMetadata(
@@ -11,14 +13,6 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat",
     type="application",
     config=ConfigClass,
-    supported_adapters={
-        "~onebot.v11",
-        "~onebot.v12",
-        "~kaiheila",
-        "~qqguild",
-        "~telegram",
-        "~feishu",
-        "~red",
-    },
+    supported_adapters=inherit_supported_adapters("nonebot_plugin_saa"),
     extra={"License": "MIT", "Author": "student_2333"},
 )
