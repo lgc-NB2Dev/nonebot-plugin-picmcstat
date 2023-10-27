@@ -23,7 +23,7 @@ RANDOM_CHAR_TEMPLATE = (
 )
 
 
-def get_latency_color(delay: Union[int, float]) -> str:
+def get_latency_color(delay: float) -> str:
     if delay <= 50:
         return "a"
     if delay <= 100:
@@ -136,7 +136,8 @@ def format_mod_list(li: List[Union[Dict, str]]) -> List[str]:
             return f"{name}-{version}" if version else name
         return None
 
-    return sorted((x for x in map(mapping_func, li) if x) ,key=lambda x: x.lower())
+    return sorted((x for x in map(mapping_func, li) if x), key=lambda x: x.lower())
+
 
 def format_ip(ip: str) -> str:
     ip_parts = ip.split(":")
