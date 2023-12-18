@@ -1,28 +1,31 @@
 import base64
 import socket
 from asyncio.exceptions import TimeoutError
+from functools import partial
 from io import BytesIO
-from itertools import zip_longest
-from typing import List, Optional, Union
+from typing import List, Optional, Sequence, Tuple, Union
+from typing_extensions import TypeAlias
 
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.bedrock_status import BedrockStatusResponse
-from mcstatus.pinger import PingResponse
+from mcstatus.motd import Motd
+from mcstatus.status_response import JavaStatusResponse
 from nonebot import get_driver
 from nonebot.log import logger
 from PIL.Image import Resampling
 from pil_utils import BuildImage, Text2Image
+from pil_utils.types import ColorType
 
 from .config import config
 from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
 from .res import DEFAULT_ICON_RES, DIRT_RES, GRASS_RES
 from .util import (
-    format_code_to_bbcode,
-    format_ip,
+    BBCodeTransformer,
+    chunks,
     format_mod_list,
     get_latency_color,
-    json_to_format_code,
-    strip_lines,
+    resolve_ip,
+    trim_motd,
 )
 
 MARGIN = 32
@@ -36,6 +39,123 @@ EXTRA_SPACING = 12
 JE_HEADER = "[MCJE服务器信息]"
 BE_HEADER = "[MCBE服务器信息]"
 SUCCESS_TITLE = "请求成功"
+
+ImageType: TypeAlias = Union[BuildImage, Text2Image, "ImageGrid"]
+
+
+def ex_default_style(text: str, color_code: str = "", **kwargs) -> Text2Image:
+    default_kwargs = {
+        "fontsize": EXTRA_FONT_SIZE,
+        "fill": CODE_COLOR[color_code or "f"],
+        "fontname": config.mcstat_font,
+        "stroke_ratio": STROKE_RATIO,
+        "stroke_fill": STROKE_COLOR[color_code or "f"],
+        "spacing": EXTRA_SPACING,
+    }
+    default_kwargs.update(kwargs)
+    return Text2Image.from_bbcode_text(text, **default_kwargs)
+
+
+def calc_offset(*pos: Tuple[int, int]) -> Tuple[int, int]:
+    return (sum(x[0] for x in pos), sum(x[1] for x in pos))
+
+
+def draw_image_type_on(bg: BuildImage, it: ImageType, pos: Tuple[int, int]):
+    if isinstance(it, ImageGrid):
+        it.draw_on(bg, pos)
+    elif isinstance(it, Text2Image):
+        it.draw_on_image(bg.image, pos)
+    else:
+        bg.paste(it, pos, alpha=True)
+
+
+class ImageLine:
+    def __init__(
+        self,
+        left: Union[ImageType, str],
+        right: Union[ImageType, str, None] = None,
+        gap: int = 0,
+    ):
+        self.left = ex_default_style(left) if isinstance(left, str) else left
+        self.right = (
+            (ex_default_style(right) if isinstance(right, str) else right)
+            if right
+            else None
+        )
+        self.gap = gap
+
+    @property
+    def width(self) -> int:
+        return self.left.width + self.gap + (self.right.width if self.right else 0)
+
+    @property
+    def height(self) -> int:
+        return max(self.left.height, (self.right.height if self.right else 0))
+
+    @property
+    def size(self) -> Tuple[int, int]:
+        return self.width, self.height
+
+
+class ImageGrid(List[ImageLine]):
+    def __init__(
+        self,
+        *lines: ImageLine,
+        spacing: int = 6,
+        gap: Optional[int] = None,
+    ):
+        if gap is not None:
+            lines = tuple(ImageLine(x.left, x.right, gap=gap) for x in lines)
+        super().__init__(lines)
+        self.spacing = spacing
+
+    @property
+    def width(self) -> int:
+        return max([x.width for x in self])
+
+    @property
+    def height(self) -> int:
+        return sum([x.height for x in self]) + self.spacing * (len(self) - 1)
+
+    @property
+    def size(self) -> Tuple[int, int]:
+        return self.width, self.height
+
+    def append_line(self, *args, **kwargs):
+        self.append(ImageLine(*args, **kwargs))
+
+    def draw_on(self, bg: BuildImage, offset_pos: Tuple[int, int]) -> None:
+        y_offset = 0
+        for line in self:
+            draw_image_type_on(
+                bg,
+                line.left,
+                calc_offset(offset_pos, (0, y_offset)),
+            )
+            if line.right:
+                draw_image_type_on(
+                    bg,
+                    line.right,
+                    calc_offset(offset_pos, (line.left.width + line.gap, y_offset)),
+                )
+            y_offset += line.height + self.spacing
+
+    def to_image(
+        self,
+        background: Optional[ColorType] = None,
+        padding: int = 2,
+    ) -> BuildImage:
+        bg = BuildImage.new(
+            "RGBA",
+            calc_offset(self.size, (padding * 2, padding * 2)),
+            background or (0, 0, 0, 0),
+        )
+        self.draw_on(bg, (padding, padding))
+        return bg
+
+
+def build_grid_from_list(li: Sequence[Union[ImageType, str]]) -> ImageGrid:
+    return ImageGrid(*(ImageLine(left, right) for left, right in chunks(li, 2)))
 
 
 def get_header_by_svr_type(svr_type: ServerType) -> str:
@@ -53,38 +173,16 @@ def draw_bg(width: int, height: int) -> BuildImage:
     return bg
 
 
-def merge_extra(extra: List[Union[Text2Image, BuildImage]]) -> BuildImage:
-    spacing = 2
-
-    bg = BuildImage.new(
-        "RGBA",
-        (
-            max(x.width for x in extra),
-            sum(x.height for x in extra) + spacing * (len(extra) - 1),
-        ),
-    )
-
-    y_offset = 0
-    for img in extra:
-        if isinstance(img, Text2Image):
-            img.draw_on_image(bg.image, (0, y_offset))
-        else:
-            bg.paste(img, (0, y_offset), alpha=True)
-        y_offset += img.height + spacing
-
-    return bg
-
-
 def build_img(
     header1: str,
     header2: str,
     icon: Optional[BuildImage] = None,
-    extras: Optional[List[Union[Text2Image, BuildImage]]] = None,
+    extra: Optional[Union[ImageType, str]] = None,
 ) -> BytesIO:
     if not icon:
         icon = DEFAULT_ICON_RES
-
-    extra = merge_extra(extras) if extras else None
+    if isinstance(extra, str):
+        extra = ex_default_style(extra)
 
     header_text_color = CODE_COLOR["f"]
     header_stroke_color = STROKE_COLOR["f"]
@@ -140,63 +238,13 @@ def build_img(
     )
 
     if extra:
-        bg.paste(
+        draw_image_type_on(
+            bg,
             extra,
             (MARGIN, int(header_height + MARGIN + MARGIN / 2)),
-            alpha=True,
         )
 
-    return bg.convert("RGB").save("PNG")
-
-
-def format_extra(extra: str) -> Text2Image:
-    return Text2Image.from_bbcode_text(
-        format_code_to_bbcode(extra),
-        EXTRA_FONT_SIZE,
-        fill=CODE_COLOR["f"],
-        fontname=config.mcstat_font,
-        stroke_ratio=STROKE_RATIO,
-        stroke_fill=STROKE_COLOR["f"],
-        spacing=EXTRA_SPACING,
-    )
-
-
-def format_list(title: str, sample: List[str]) -> Optional[BuildImage]:
-    text_img = [format_extra(x) for x in sample if x]
-    if not text_img:
-        return None
-
-    title_img = format_extra(title)
-
-    text_img_l = text_img[::2]
-    text_img_r = text_img[1::2]
-    max_width_l = max([x.width for x in text_img_l]) if text_img_l else 0
-    max_width_r = max([x.width for x in text_img_r]) if text_img_r else 0
-    height_l = sum([x.height for x in text_img_l])
-    height_r = sum([x.height for x in text_img_r])
-
-    spacing_width = format_extra("  ").width
-
-    img_height = max(height_l, height_r)
-    img_width = title_img.width + max_width_l
-    if max_width_r:
-        img_width += spacing_width + max_width_r
-
-    img = BuildImage.new("RGBA", (img_width, img_height), (255, 255, 255, 0))
-    title_img.draw_on_image(img.image, (0, 0))
-
-    y_offset = 0
-    for lt, rt in zip_longest(text_img_l, text_img_r):
-        if lt:
-            lt.draw_on_image(img.image, (title_img.width, y_offset))
-        if rt:
-            rt.draw_on_image(
-                img.image,
-                (title_img.width + max_width_l + spacing_width, y_offset),
-            )
-        y_offset += max(lt.height if lt else 0, rt.height if rt else 0)
-
-    return img
+    return bg.convert("RGB").save("jpeg")
 
 
 def draw_help(svr_type: ServerType) -> BytesIO:
@@ -204,88 +252,100 @@ def draw_help(svr_type: ServerType) -> BytesIO:
     prefix = cmd_prefix_li[0] if cmd_prefix_li else ""
 
     extra_txt = f"查询Java版服务器: {prefix}motd <服务器IP>\n查询基岩版服务器: {prefix}motdpe <服务器IP>"
-    return build_img(
-        get_header_by_svr_type(svr_type),
-        "使用帮助",
-        extras=[format_extra(extra_txt)],
-    )
+    return build_img(get_header_by_svr_type(svr_type), "使用帮助", extra=extra_txt)
 
 
-def draw_java(res: PingResponse, addr: str) -> BytesIO:
-    icon = (
-        BuildImage.open(BytesIO(base64.b64decode(res.favicon.split(",")[-1])))
-        if res.favicon
-        else None
-    )
-
-    addr_txt = f"§7测试地址: §f{addr}\n" if config.mcstat_show_addr else ""
-    players_online = res.players.online
-    players_max = res.players.max
+def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
+    transformer = BBCodeTransformer(bedrock=res.motd.bedrock)
+    motd = transformer.transform(trim_motd(res.motd.parsed))
     online_percent = (
-        "{:.2f}".format(players_online / players_max * 100) if players_max else "?.??"
+        "{:.2f}".format(res.players.online / res.players.max * 100)
+        if res.players.max
+        else "?.??"
     )
-    motd = strip_lines(json_to_format_code(res.raw["description"]))
 
-    player_li = [x.name for x in res.players.sample] if res.players.sample else []
-
-    mod_client = ""
-    mod_total = ""
-    mod_list = []
+    mod_svr_type: Optional[str] = None
+    mod_list: Optional[List[str]] = None
     if mod_info := res.raw.get("modinfo"):
         if tmp := mod_info.get("type"):
-            mod_client = f"§7Mod端类型: §f{tmp}\n"
-
+            mod_svr_type = tmp
         if tmp := mod_info.get("modList"):
-            mod_total = f"§7Mod总数: §f{len(tmp)}\n"
-            if config.mcstat_show_mods:
-                mod_list = tmp
+            mod_list = format_mod_list(tmp)
 
-    extra_txt = (
-        f"{motd}§r\n"
-        f"{addr_txt}"
-        f"§7服务端名: §f{res.version.name}\n"
-        f"{mod_client}"
-        f"§7协议版本: §f{res.version.protocol}\n"
-        f"§7当前人数: §f{players_online}/{players_max} ({online_percent}%)\n"
-        f"{mod_total}"
-        f"§7测试延迟: §{get_latency_color(res.latency)}{res.latency:.2f}ms"
+    l_style = partial(ex_default_style, color_code="7")
+    grid = ImageGrid()
+    grid.append_line(motd)
+    if config.mcstat_show_addr:
+        grid.append_line(l_style("测试地址: "), addr)
+    grid.append_line(l_style("服务端名: "), res.version.name)
+    if mod_svr_type:
+        grid.append_line(l_style("Mod 端类型: "), mod_svr_type)
+    grid.append_line(l_style("协议版本: "), str(res.version.protocol))
+    grid.append_line(
+        l_style("当前人数: "),
+        f"{res.players.online}/{res.players.max} ({online_percent}%)",
     )
+    if mod_list:
+        grid.append_line(l_style("Mod 总数: "), str(len(mod_list)))
+    grid.append_line(l_style("聊天签名: "), "必需" if res.enforces_secure_chat else "无需")
+    grid.append_line(
+        l_style("测试延迟: "),
+        ex_default_style(f"{res.latency:.2f}ms", get_latency_color(res.latency)),
+    )
+    if mod_list and config.mcstat_show_mods:
+        grid.append_line(l_style("Mod 列表: "), build_grid_from_list(mod_list))
+    if res.players.sample:
+        grid.append_line(
+            l_style("玩家列表: "),
+            build_grid_from_list(
+                [
+                    transformer.transform(Motd.parse(x.name).parsed)
+                    for x in res.players.sample
+                ],
+            ),
+        )
 
-    extras: List[Union[Text2Image, BuildImage]] = [format_extra(extra_txt)]
-    if mod_list and (li := format_list("§7Mod列表: ", format_mod_list(mod_list))):
-        extras.append(li)
-    if player_li and (li := format_list("§7玩家列表: ", player_li)):
-        extras.append(li)
-
-    return build_img(JE_HEADER, SUCCESS_TITLE, icon=icon, extras=extras)
+    icon = (
+        BuildImage.open(BytesIO(base64.b64decode(res.icon.split(",")[-1])))
+        if res.icon
+        else None
+    )
+    return build_img(JE_HEADER, SUCCESS_TITLE, icon=icon, extra=grid)
 
 
 def draw_bedrock(res: BedrockStatusResponse, addr: str) -> BytesIO:
-    addr_txt = f"§7测试地址: §f{addr}\n" if config.mcstat_show_addr else ""
-    map_name = f"§7存档名称: §f{res.map}§r\n" if res.map else ""
-    game_mode = (
-        f"§7游戏模式: §f{GAME_MODE_MAP.get(res.gamemode, res.gamemode)}\n"
-        if res.gamemode
-        else ""
-    )
+    transformer = BBCodeTransformer(bedrock=res.motd.bedrock)
+    motd = transformer.transform(trim_motd(res.motd.parsed))
     online_percent = (
         "{:.2f}".format(int(res.players_online) / int(res.players_max) * 100)
         if res.players_max
         else "?.??"
     )
-    motd = strip_lines(res.motd)
 
-    extra_txt = (
-        f"{motd}§r\n"
-        f"{addr_txt}"
-        f"§7协议版本: §f{res.version.protocol}\n"
-        f"§7游戏版本: §f{res.version.version}\n"
-        f"§7在线人数: §f{res.players_online}/{res.players_max} ({online_percent}%)\n"
-        f"{map_name}"
-        f"{game_mode}"
-        f"§7测试延迟: §{get_latency_color(res.latency)}{res.latency:.2f}ms"
+    l_style = partial(ex_default_style, color_code="7")
+    grid = ImageGrid()
+    grid.append_line(motd)
+    if config.mcstat_show_addr:
+        grid.append_line(l_style("测试地址: "), addr)
+    grid.append_line(l_style("协议版本: "), str(res.version.protocol))
+    grid.append_line(l_style("游戏版本: "), res.version.version)
+    grid.append_line(
+        l_style("当前人数: "),
+        f"{res.players.online}/{res.players.max} ({online_percent}%)",
     )
-    return build_img(BE_HEADER, SUCCESS_TITLE, extras=[format_extra(extra_txt)])
+    if res.map:
+        grid.append_line(l_style("存档名称: "), res.map)
+    if res.gamemode:
+        grid.append_line(
+            l_style("游戏模式: "),
+            GAME_MODE_MAP.get(res.gamemode, res.gamemode),
+        )
+    grid.append_line(
+        l_style("测试延迟: "),
+        ex_default_style(f"{res.latency:.2f}ms", get_latency_color(res.latency)),
+    )
+
+    return build_img(BE_HEADER, SUCCESS_TITLE, extra=grid)
 
 
 def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
@@ -297,36 +357,23 @@ def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
         extra = str(e)
     else:
         reason = "出错了！"
-        extra = repr(e)
-
-    extra_img = format_extra(extra).wrap(MIN_WIDTH - MARGIN * 2) if extra else None
-
-    return build_img(
-        get_header_by_svr_type(svr_type),
-        reason,
-        extras=[extra_img] if extra_img else None,
-    )
+        extra = f"{e.__class__.__name__}: {e}"
+    extra_img = ex_default_style(extra).wrap(MIN_WIDTH - MARGIN * 2) if extra else None
+    return build_img(get_header_by_svr_type(svr_type), reason, extra=extra_img)
 
 
-async def draw(ip: str, svr_type: ServerType) -> Union[BytesIO, str]:
-    if svr_type not in ("je", "be"):
-        raise ValueError("Server type must be `je` or `be`")  # noqa: TRY003
-
+async def draw(ip: str, svr_type: ServerType) -> BytesIO:
     try:
         if not ip:
             return draw_help(svr_type)
 
-        original_ip = ip
-        ip = format_ip(ip)
-
-        if svr_type == "je":
-            server = await JavaServer.async_lookup(ip)
-            status = await server.async_status()
-            return draw_java(status, original_ip)
-
-        # else:
-        status = await BedrockServer.lookup(ip).async_status()
-        return draw_bedrock(status, original_ip)
+        is_java = svr_type == "je"
+        host, port = await resolve_ip(ip, is_java)
+        if is_java:
+            status = await JavaServer(host, port).async_status()
+            return draw_java(status, ip)
+        status = await BedrockServer(host, port).async_status()
+        return draw_bedrock(status, ip)
 
     except Exception as e:
         logger.exception("获取服务器状态/画服务器状态图出错")
@@ -334,4 +381,4 @@ async def draw(ip: str, svr_type: ServerType) -> Union[BytesIO, str]:
             return draw_error(e, svr_type)
         except Exception:
             logger.exception("画异常状态图失败")
-            return "出现未知错误，请检查后台输出"
+            raise

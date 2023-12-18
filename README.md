@@ -18,7 +18,7 @@ _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 <a href="https://pypi.python.org/pypi/nonebot-plugin-picmcstat">
     <img src="https://img.shields.io/pypi/v/nonebot-plugin-picmcstat.svg" alt="pypi">
 </a>
-<img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="python">
+<img src="https://img.shields.io/badge/python-3.8.1+-blue.svg" alt="python">
 <a href="https://pypi.python.org/pypi/nonebot-plugin-picmcstat">
     <img src="https://img.shields.io/pypi/dm/nonebot-plugin-picmcstat" alt="pypi download">
 </a>
@@ -139,23 +139,34 @@ plugins = [
 
 ### `MCSTAT_SHORTCUTS` - 快捷指令列表
 
-这个配置项能够帮助你简化一些查询指令（仅支持 OneBot V11 适配器）
+这个配置项能够帮助你简化一些查询指令
 
-此配置项的类型是一个列表，里面的元素需要为一个特定结构的字典  
-这个字典需要有三个元素
+此配置项的类型是一个列表，里面的元素需要为一个特定结构的字典：
 
 - `regex` - 用于匹配指令的正则，例如 `^查服$`  
   （注意，nb2 以 JSON 格式解析配置项，所以当你要在正则表达式里表示`\`时，你需要将其转义为`\\`）
 - `host` - 要查询的服务器地址，格式为 `<IP>[:端口]`，  
   例如 `hypixel.net` 或 `example.com:1919`
 - `type` - 要查询服务器的类型，`je` 表示 Java 版服，`be` 表示基岩版服
-- `whitelist` - 群聊白名单，只有里面列出的群号可以查询，可以不填来对所有群开放查询
+- `whitelist` - （仅支持 OneBot V11 适配器）群聊白名单，只有里面列出的群号可以查询，可以不填来对所有群开放查询
 
 最终的配置项看起来是这样子的，当你发送 `查服` 时，机器人会把 EaseCation 服务器的状态发送出来
 
 ```env
-MCSTAT_SHORTCUTS=[{"regex":"^查服$","host":"asia.easecation.net","type":"be"}]
+MCSTAT_SHORTCUTS='
+[
+  {"regex": "^查服$", "host": "asia.easecation.net", "type": "be"}
+]
+'
 ```
+
+### `MCSTAT_RESOLVE_DNS` - 是否由插件解析 DNS 记录
+
+默认：`True`
+
+是否由插件解析一遍 DNS 记录后再进行查询，  
+如果你的服务器在运行 Clash 等拦截了 DNS 解析的软件，且查询部分地址时遇到了问题，请尝试关闭此配置项  
+此配置项不影响 Java 服务器的 SRV 记录解析
 
 ## 🎉 使用
 
@@ -189,6 +200,13 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
   </details>
 
 ## 📝 更新日志
+
+### 0.5.0
+
+- 换用 Alconna 支持多平台
+- 快捷指令支持多平台（`whitelist` 依然仅支持 OneBot V11）
+- 添加配置项 `MCSTAT_RESOLVE_DNS`
+- 部分代码重构 ~~Bug 海与屎山代码又增加了~~
 
 ### 0.4.0
 

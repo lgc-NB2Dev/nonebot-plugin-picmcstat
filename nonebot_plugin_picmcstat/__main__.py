@@ -1,14 +1,32 @@
-from typing import Awaitable, Callable, NoReturn
+from typing import NoReturn
 
 from nonebot import logger, on_command, on_regex
+from nonebot.adapters import Event as BaseEvent
 from nonebot.adapters import Message
-from nonebot.matcher import Matcher
+from nonebot.exception import FinishedException
 from nonebot.params import CommandArg
 from nonebot.typing import T_State
-from nonebot_plugin_saa import Image, MessageFactory
+from nonebot_plugin_alconna.uniseg import UniMessage
 
 from .config import ShortcutType, config
 from .draw import ServerType, draw
+
+try:
+    from nonebot.adapters.onebot.v11 import GroupMessageEvent as OB11GroupMessageEvent
+except ImportError:
+    OB11GroupMessageEvent = None
+
+
+async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
+    try:
+        ret = await draw(ip, svr_type)
+    except Exception:
+        msg = UniMessage("出现未知错误，请检查后台输出")
+    else:
+        msg = UniMessage.image(raw=ret)
+    await msg.send(reply_to=config.mcstat_reply_target)
+    raise FinishedException
+
 
 motdpe_matcher = on_command(
     "motdpe",
@@ -17,7 +35,7 @@ motdpe_matcher = on_command(
 )
 motd_matcher = on_command(
     "motd",
-    aliases={"!motd", "！motd"},
+    aliases={"!motd", "！motd", "motdje", "!motdje", "！motdje"},
     priority=2,
     state={"svr_type": "je"},
 )
@@ -28,44 +46,27 @@ motd_matcher = on_command(
 async def _(state: T_State, arg_msg: Message = CommandArg()):
     arg = arg_msg.extract_plain_text().strip()
     svr_type: ServerType = state["svr_type"]
-
-    pic = await draw(arg, svr_type)
-    await MessageFactory(Image(pic)).send(reply=config.mcstat_reply_target)
+    await finish_with_query(arg, svr_type)
 
 
-try:
-    from nonebot.adapters.onebot.v11 import (
-        GroupMessageEvent,
-        MessageEvent,
-        MessageSegment,
-    )
+def append_shortcut_handler(shortcut: ShortcutType):
+    async def rule(event: BaseEvent):  # type: ignore[override]
+        if not OB11GroupMessageEvent:
+            logger.warning("快捷指令群号白名单仅可在 OneBot V11 适配器下使用")
+        elif (wl := shortcut.whitelist) and isinstance(event, OB11GroupMessageEvent):
+            return event.group_id in wl
+        return True
 
-    def get_shortcut_handler(
-        host: str,
-        svr_type: ServerType,
-    ) -> Callable[..., Awaitable[NoReturn]]:
-        async def shortcut_handler(matcher: Matcher):
-            img = await draw(host, svr_type)
-            await matcher.finish(MessageSegment.image(img))
+    async def handler():
+        await finish_with_query(shortcut.host, shortcut.type)
 
-        return shortcut_handler
+    on_regex(shortcut.regex, rule=rule).append_handler(handler)
 
-    def append_shortcut_handler(shortcut: ShortcutType):
-        async def rule(event: MessageEvent):
-            if (wl := shortcut.whitelist) and isinstance(event, GroupMessageEvent):
-                return event.group_id in wl
-            return True
 
-        on_regex(shortcut.regex, rule=rule).append_handler(
-            get_shortcut_handler(shortcut.host, shortcut.type),
-        )
+def startup():
+    if s := config.mcstat_shortcuts:
+        for v in s:
+            append_shortcut_handler(v)
 
-    def startup():
-        if s := config.mcstat_shortcuts:
-            for v in s:
-                append_shortcut_handler(v)
 
-    startup()
-
-except ImportError:
-    logger.warning("无法导入 OneBot V11 适配器，已跳过注册快捷指令")
+startup()

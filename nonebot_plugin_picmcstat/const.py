@@ -1,5 +1,7 @@
 from typing import Literal
 
+from mcstatus.motd.components import Formatting, MinecraftColor
+
 ServerType = Literal["je", "be"]
 
 CODE_COLOR = {
@@ -21,7 +23,6 @@ CODE_COLOR = {
     "f": "#FFFFFF",
     "g": "#DDD605",
 }
-
 STROKE_COLOR = {
     "0": "#000000",
     "1": "#00002A",
@@ -41,31 +42,8 @@ STROKE_COLOR = {
     "f": "#3F3F3F",
     "g": "#373501",
 }
-
-STRING_CODE = {
-    "black": "0",
-    "dark_blue": "1",
-    "dark_green": "2",
-    "dark_aqua": "3",
-    "dark_red": "4",
-    "dark_purple": "5",
-    "gold": "6",
-    "gray": "7",
-    "dark_gray": "8",
-    "blue": "9",
-    "green": "a",
-    "aqua": "b",
-    "red": "c",
-    "light_purple": "d",
-    "yellow": "e",
-    "white": "f",
-    "bold": "l",
-    "italic": "o",
-    "underlined": "n",
-    "strikethrough": "m",
-    "obfuscated": "k",
-}
-
+CODE_COLOR_BEDROCK = {**CODE_COLOR, "g": "#FFAA00"}
+STROKE_COLOR_BEDROCK = {**STROKE_COLOR, "g": "#2A2A00"}
 STYLE_BBCODE = {
     "l": ["[b]", "[/b]"],
     "m": ["[del]", "[/del]"],
@@ -73,6 +51,14 @@ STYLE_BBCODE = {
     "o": ["[i]", "[/i]"],
 }
 
-GAME_MODE_MAP = {"Survival": "生存", "Creative": "创造", "Adventure": "冒险"}
+ENUM_CODE_COLOR = {MinecraftColor(k): v for k, v in CODE_COLOR.items()}
+ENUM_STROKE_COLOR = {MinecraftColor(k): v for k, v in STROKE_COLOR.items()}
+ENUM_CODE_COLOR_BEDROCK = {MinecraftColor(k): v for k, v in CODE_COLOR_BEDROCK.items()}
+ENUM_STROKE_COLOR_BEDROCK = {
+    MinecraftColor(k): v for k, v in STROKE_COLOR_BEDROCK.items()
+}
+ENUM_STYLE_BBCODE = {Formatting(k): v for k, v in STYLE_BBCODE.items()}
 
+
+GAME_MODE_MAP = {"Survival": "生存", "Creative": "创造", "Adventure": "冒险"}
 FORMAT_CODE_REGEX = r"§[0-9abcdefgklmnor]"

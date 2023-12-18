@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from nonebot import get_driver
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .const import ServerType
 
@@ -18,7 +18,8 @@ class ConfigClass(BaseModel):
     mcstat_show_addr: bool = False
     mcstat_show_mods: bool = False
     mcstat_reply_target: bool = True
-    mcstat_shortcuts: Optional[List[ShortcutType]] = []
+    mcstat_shortcuts: List[ShortcutType] = Field(default_factory=list)
+    mcstat_resolve_dns: bool = True
 
 
 config = ConfigClass.parse_obj(get_driver().config)
