@@ -127,6 +127,10 @@ plugins = [
 
 默认：`False`
 
+### `MCSTAT_SHOW_DELAY` - 是否显示测试延迟
+
+默认：`True`
+
 ### `MCSTAT_SHOW_MODS` - 是否在生成的图片中显示 Mod 列表
 
 默认：`False`
@@ -168,6 +172,13 @@ MCSTAT_SHORTCUTS='
 如果你的服务器在运行 Clash 等拦截了 DNS 解析的软件，且查询部分地址时遇到了问题，请尝试关闭此配置项  
 此配置项不影响 Java 服务器的 SRV 记录解析
 
+### `MCSTAT_QUERY_TWICE` - 是否查询两遍服务器状态
+
+默认：`True`
+
+由于第一次测得的延迟一般不准，所以做了这个配置，  
+开启后每次查询时，会丢掉第一次的结果再查询一次，且使用第二次查询到的结果
+
 ## 🎉 使用
 
 发送 `motd` 指令 查看使用指南
@@ -200,6 +211,11 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
   </details>
 
 ## 📝 更新日志
+
+### 0.5.1
+
+- 修复 玩家 / Mod 列表 中出现的一些 Bug ~~果然又出 Bug 了~~
+- 添加配置项 `MCSTAT_SHOW_DELAY`、`MCSTAT_QUERY_TWICE`
 
 ### 0.5.0
 

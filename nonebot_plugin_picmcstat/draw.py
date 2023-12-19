@@ -3,7 +3,7 @@ import socket
 from asyncio.exceptions import TimeoutError
 from functools import partial
 from io import BytesIO
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union, cast
 from typing_extensions import TypeAlias
 
 from mcstatus import BedrockServer, JavaServer
@@ -35,6 +35,7 @@ EXTRA_FONT_SIZE = 8 * 4
 EXTRA_STROKE_WIDTH = 2
 STROKE_RATIO = 0.0625
 EXTRA_SPACING = 12
+LIST_GAP = 32
 
 JE_HEADER = "[MCJE服务器信息]"
 BE_HEADER = "[MCBE服务器信息]"
@@ -86,7 +87,8 @@ class ImageLine:
 
     @property
     def width(self) -> int:
-        return self.left.width + self.gap + (self.right.width if self.right else 0)
+        rw = self.right.width if self.right else 0
+        return self.left.width + self.gap + rw
 
     @property
     def height(self) -> int:
@@ -103,19 +105,35 @@ class ImageGrid(List[ImageLine]):
         *lines: ImageLine,
         spacing: int = 6,
         gap: Optional[int] = None,
+        align_items: bool = True,
     ):
         if gap is not None:
             lines = tuple(ImageLine(x.left, x.right, gap=gap) for x in lines)
         super().__init__(lines)
         self.spacing = spacing
+        self.align_items = align_items
+
+    @classmethod
+    def from_list(cls, li: Sequence[Union[ImageType, str]], **kwargs) -> "ImageGrid":
+        return cls(
+            *(ImageLine(*cast(Tuple[Any, Any], x)) for x in chunks(li, 2)),
+            **kwargs,
+        )
 
     @property
     def width(self) -> int:
-        return max([x.width for x in self])
+        return (
+            (
+                max(x.left.width for x in self)
+                + max((x.right.width + x.gap if x.right else 0) for x in self)
+            )
+            if self.align_items
+            else max(x.width for x in self)
+        )
 
     @property
     def height(self) -> int:
-        return sum([x.height for x in self]) + self.spacing * (len(self) - 1)
+        return sum(x.height for x in self) + self.spacing * (len(self) - 1)
 
     @property
     def size(self) -> Tuple[int, int]:
@@ -125,6 +143,7 @@ class ImageGrid(List[ImageLine]):
         self.append(ImageLine(*args, **kwargs))
 
     def draw_on(self, bg: BuildImage, offset_pos: Tuple[int, int]) -> None:
+        max_lw = max(x.left.width for x in self) if self.align_items else None
         y_offset = 0
         for line in self:
             draw_image_type_on(
@@ -136,7 +155,10 @@ class ImageGrid(List[ImageLine]):
                 draw_image_type_on(
                     bg,
                     line.right,
-                    calc_offset(offset_pos, (line.left.width + line.gap, y_offset)),
+                    calc_offset(
+                        offset_pos,
+                        ((max_lw or line.left.width) + line.gap, y_offset),
+                    ),
                 )
             y_offset += line.height + self.spacing
 
@@ -152,10 +174,6 @@ class ImageGrid(List[ImageLine]):
         )
         self.draw_on(bg, (padding, padding))
         return bg
-
-
-def build_grid_from_list(li: Sequence[Union[ImageType, str]]) -> ImageGrid:
-    return ImageGrid(*(ImageLine(left, right) for left, right in chunks(li, 2)))
 
 
 def get_header_by_svr_type(svr_type: ServerType) -> str:
@@ -273,7 +291,7 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
             mod_list = format_mod_list(tmp)
 
     l_style = partial(ex_default_style, color_code="7")
-    grid = ImageGrid()
+    grid = ImageGrid(align_items=False)
     grid.append_line(motd)
     if config.mcstat_show_addr:
         grid.append_line(l_style("测试地址: "), addr)
@@ -288,20 +306,25 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
     if mod_list:
         grid.append_line(l_style("Mod 总数: "), str(len(mod_list)))
     grid.append_line(l_style("聊天签名: "), "必需" if res.enforces_secure_chat else "无需")
-    grid.append_line(
-        l_style("测试延迟: "),
-        ex_default_style(f"{res.latency:.2f}ms", get_latency_color(res.latency)),
-    )
+    if config.mcstat_show_delay:
+        grid.append_line(
+            l_style("测试延迟: "),
+            ex_default_style(f"{res.latency:.2f}ms", get_latency_color(res.latency)),
+        )
     if mod_list and config.mcstat_show_mods:
-        grid.append_line(l_style("Mod 列表: "), build_grid_from_list(mod_list))
+        grid.append_line(
+            l_style("Mod 列表: "),
+            ImageGrid.from_list(mod_list, gap=LIST_GAP),
+        )
     if res.players.sample:
         grid.append_line(
             l_style("玩家列表: "),
-            build_grid_from_list(
+            ImageGrid.from_list(
                 [
                     transformer.transform(Motd.parse(x.name).parsed)
                     for x in res.players.sample
                 ],
+                gap=LIST_GAP,
             ),
         )
 
@@ -323,7 +346,7 @@ def draw_bedrock(res: BedrockStatusResponse, addr: str) -> BytesIO:
     )
 
     l_style = partial(ex_default_style, color_code="7")
-    grid = ImageGrid()
+    grid = ImageGrid(align_items=False)
     grid.append_line(motd)
     if config.mcstat_show_addr:
         grid.append_line(l_style("测试地址: "), addr)
@@ -340,10 +363,11 @@ def draw_bedrock(res: BedrockStatusResponse, addr: str) -> BytesIO:
             l_style("游戏模式: "),
             GAME_MODE_MAP.get(res.gamemode, res.gamemode),
         )
-    grid.append_line(
-        l_style("测试延迟: "),
-        ex_default_style(f"{res.latency:.2f}ms", get_latency_color(res.latency)),
-    )
+    if config.mcstat_show_delay:
+        grid.append_line(
+            l_style("测试延迟: "),
+            ex_default_style(f"{res.latency:.2f}ms", get_latency_color(res.latency)),
+        )
 
     return build_img(BE_HEADER, SUCCESS_TITLE, extra=grid)
 
@@ -362,6 +386,15 @@ def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
     return build_img(get_header_by_svr_type(svr_type), reason, extra=extra_img)
 
 
+def draw_resp(
+    resp: Union[JavaStatusResponse, BedrockStatusResponse],
+    addr: str,
+) -> BytesIO:
+    if isinstance(resp, JavaStatusResponse):
+        return draw_java(resp, addr)
+    return draw_bedrock(resp, addr)
+
+
 async def draw(ip: str, svr_type: ServerType) -> BytesIO:
     try:
         if not ip:
@@ -369,11 +402,12 @@ async def draw(ip: str, svr_type: ServerType) -> BytesIO:
 
         is_java = svr_type == "je"
         host, port = await resolve_ip(ip, is_java)
-        if is_java:
-            status = await JavaServer(host, port).async_status()
-            return draw_java(status, ip)
-        status = await BedrockServer(host, port).async_status()
-        return draw_bedrock(status, ip)
+
+        svr = JavaServer(host, port) if is_java else BedrockServer(host, port)
+        if config.mcstat_query_twice:
+            await svr.async_status()  # 第一次延迟通常不准
+        resp = await svr.async_status()
+        return draw_resp(resp, ip)
 
     except Exception as e:
         logger.exception("获取服务器状态/画服务器状态图出错")
