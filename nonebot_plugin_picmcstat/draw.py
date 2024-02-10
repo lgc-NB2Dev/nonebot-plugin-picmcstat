@@ -305,7 +305,10 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
     )
     if mod_list:
         grid.append_line(l_style("Mod 总数: "), str(len(mod_list)))
-    grid.append_line(l_style("聊天签名: "), "必需" if res.enforces_secure_chat else "无需")
+    grid.append_line(
+        l_style("聊天签名: "),
+        "必需" if res.enforces_secure_chat else "无需",
+    )
     if config.mcstat_show_delay:
         grid.append_line(
             l_style("测试延迟: "),

@@ -1,8 +1,7 @@
 from typing import NoReturn
 
 from nonebot import logger, on_command, on_regex
-from nonebot.adapters import Event as BaseEvent
-from nonebot.adapters import Message
+from nonebot.adapters import Event as BaseEvent, Message
 from nonebot.exception import FinishedException
 from nonebot.params import CommandArg
 from nonebot.typing import T_State
