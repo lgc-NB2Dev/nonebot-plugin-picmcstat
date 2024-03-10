@@ -12,18 +12,27 @@
 
 _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
+<img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="python">
+<a href="https://pdm.fming.dev">
+  <img src="https://img.shields.io/badge/pdm-managed-blueviolet" alt="pdm-managed">
+</a>
+<a href="https://wakatime.com/badge/user/b61b0f9a-f40b-4c82-bc51-0a75c67bfccf/project/f4778875-45a4-4688-8e1b-b8c844440abb">
+  <img src="https://wakatime.com/badge/user/b61b0f9a-f40b-4c82-bc51-0a75c67bfccf/project/f4778875-45a4-4688-8e1b-b8c844440abb.svg" alt="wakatime">
+</a>
+
+<br />
+
+<a href="https://pydantic.dev">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/lgc-NB2Dev/readme/main/template/pyd-v1-or-v2.json" alt="Pydantic Version 1 Or 2" >
+</a>
 <a href="./LICENSE">
-    <img src="https://img.shields.io/github/license/lgc2333/nonebot-plugin-picmcstat.svg" alt="license">
+  <img src="https://img.shields.io/github/license/lgc-NB2Dev/nonebot-plugin-picmcstat.svg" alt="license">
 </a>
 <a href="https://pypi.python.org/pypi/nonebot-plugin-picmcstat">
-    <img src="https://img.shields.io/pypi/v/nonebot-plugin-picmcstat.svg" alt="pypi">
+  <img src="https://img.shields.io/pypi/v/nonebot-plugin-picmcstat.svg" alt="pypi">
 </a>
-<img src="https://img.shields.io/badge/python-3.8.1+-blue.svg" alt="python">
 <a href="https://pypi.python.org/pypi/nonebot-plugin-picmcstat">
-    <img src="https://img.shields.io/pypi/dm/nonebot-plugin-picmcstat" alt="pypi download">
-</a>
-<a href="https://wakatime.com/badge/user/b61b0f9a-f40b-4c82-bc51-0a75c67bfccf/project/5bc0f141-d1ec-430a-8d21-0e312188fdae">
-  <img src="https://wakatime.com/badge/user/b61b0f9a-f40b-4c82-bc51-0a75c67bfccf/project/5bc0f141-d1ec-430a-8d21-0e312188fdae.svg" alt="wakatime">
+  <img src="https://img.shields.io/pypi/dm/nonebot-plugin-picmcstat" alt="pypi download">
 </a>
 
 </div>
@@ -211,6 +220,10 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
   </details>
 
 ## 📝 更新日志
+
+### 0.6.0
+
+- 适配 Pydantic V1 & V2
 
 ### 0.5.1
 

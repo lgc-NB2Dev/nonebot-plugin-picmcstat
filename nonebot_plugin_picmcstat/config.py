@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from nonebot import get_driver
+from nonebot import get_plugin_config
 from pydantic import BaseModel, Field
 
 from .const import ServerType
@@ -24,4 +24,4 @@ class ConfigClass(BaseModel):
     mcstat_query_twice: bool = True
 
 
-config = ConfigClass.parse_obj(get_driver().config)
+config = get_plugin_config(ConfigClass)
