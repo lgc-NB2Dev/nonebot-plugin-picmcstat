@@ -5,7 +5,7 @@ description = "A NoneBot2 plugin generates a pic from a Minecraft server's MOTD"
 authors = [{ name = "student_2333", email = "lgc2333@126.com" }]
 dependencies = [
     "nonebot2>=2.2.0",
-    "nonebot-plugin-alconna>=0.40.0rc1",
+    "nonebot-plugin-alconna>=0.40.1",
     "mcstatus>=11.1.0",
     "pil-utils>=0.1.6",
     "punycode>=0.2.1",
