@@ -1,3 +1,4 @@
+import re
 from typing import Literal
 
 from mcstatus.motd.components import Formatting, MinecraftColor
@@ -49,7 +50,11 @@ STYLE_BBCODE = {
     "m": ["[del]", "[/del]"],
     "n": ["[u]", "[/u]"],
     "o": ["[i]", "[/i]"],
+    "k": ["[obfuscated]", "[/obfuscated]"],  # placeholder
 }
+OBFUSCATED_PLACEHOLDER_REGEX = re.compile(
+    r"\[obfuscated\](?P<inner>.*?)\[/obfuscated\]",
+)
 
 ENUM_CODE_COLOR = {MinecraftColor(k): v for k, v in CODE_COLOR.items()}
 ENUM_STROKE_COLOR = {MinecraftColor(k): v for k, v in STROKE_COLOR.items()}
@@ -58,7 +63,6 @@ ENUM_STROKE_COLOR_BEDROCK = {
     MinecraftColor(k): v for k, v in STROKE_COLOR_BEDROCK.items()
 }
 ENUM_STYLE_BBCODE = {Formatting(k): v for k, v in STYLE_BBCODE.items()}
-
 
 GAME_MODE_MAP = {"Survival": "生存", "Creative": "创造", "Adventure": "冒险"}
 FORMAT_CODE_REGEX = r"§[0-9abcdefgklmnor]"

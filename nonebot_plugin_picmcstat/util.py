@@ -24,6 +24,7 @@ from .const import (
     ENUM_STROKE_COLOR_BEDROCK,
     ENUM_STYLE_BBCODE,
     FORMAT_CODE_REGEX,
+    OBFUSCATED_PLACEHOLDER_REGEX,
     STROKE_COLOR,
 )
 
@@ -180,7 +181,12 @@ class BBCodeTransformer(PlainTransformer):
         return super().transform(motd_components)
 
     def _format_output(self, results: list[str]) -> str:
-        return super()._format_output(results) + "".join(self.on_reset)
+        text = super()._format_output(results) + "".join(self.on_reset)
+        return re.sub(
+            OBFUSCATED_PLACEHOLDER_REGEX,
+            lambda m: (random_char(len(i)) if (i := m.group("inner")) else ""),
+            text,
+        )
 
     def _handle_minecraft_color(self, element: MinecraftColor, /) -> str:
         stroke_map = ENUM_STROKE_COLOR_BEDROCK if self.bedrock else ENUM_STROKE_COLOR
@@ -197,7 +203,6 @@ class BBCodeTransformer(PlainTransformer):
             to_return = "".join(self.on_reset)
             self.on_reset = []
             return to_return
-
         start, end = ENUM_STYLE_BBCODE[element]
         self.on_reset.append(end)
         return start

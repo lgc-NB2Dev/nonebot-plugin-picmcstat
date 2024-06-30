@@ -215,6 +215,10 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 
 ## 📝 更新日志
 
+### 0.6.1
+
+- fix [#21](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/issues/21)
+
 ### 0.6.0
 
 - 适配 Pydantic V1 & V2
