@@ -407,9 +407,10 @@ async def draw(ip: str, svr_type: ServerType) -> BytesIO:
         host, port = await resolve_ip(ip, is_java)
 
         svr = JavaServer(host, port) if is_java else BedrockServer(host, port)
+        kw = {"version": config.mcstat_java_protocol_version} if is_java else {}
         if config.mcstat_query_twice:
-            await svr.async_status()  # 第一次延迟通常不准
-        resp = await svr.async_status()
+            await svr.async_status(**kw)  # 第一次延迟通常不准
+        resp = await svr.async_status(**kw)
         return draw_resp(resp, ip)
 
     except Exception as e:

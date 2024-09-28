@@ -22,6 +22,7 @@ class ConfigClass(BaseModel):
     mcstat_shortcuts: List[ShortcutType] = Field(default_factory=list)
     mcstat_resolve_dns: bool = True
     mcstat_query_twice: bool = True
+    mcstat_java_protocol_version: int = 767
 
 
 config = get_plugin_config(ConfigClass)
