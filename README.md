@@ -230,6 +230,10 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 
 ## 📝 更新日志
 
+### 0.6.3
+
+- fix [#22](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/issues/22)
+
 ### 0.6.2
 
 - 允许自定义向 Java 服务器发送的客户端协议版本，且提高默认协议版本以解决部分服务器 Motd 渐变显示异常的问题

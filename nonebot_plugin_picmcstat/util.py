@@ -129,8 +129,10 @@ def trim_motd(motd: List[ParsedMotdComponent]) -> List[ParsedMotdComponent]:
 
     in_content = False
     for comp in motd:
-        if (not isinstance(comp, str)) or (not comp):
+        if not isinstance(comp, str):
             modified_motd.append(comp)
+            continue
+        if not comp:
             continue
 
         if not in_content:
@@ -156,7 +158,7 @@ def trim_motd(motd: List[ParsedMotdComponent]) -> List[ParsedMotdComponent]:
 
         for i in range(len(modified_motd) - 1, -1, -1):
             it = modified_motd[i]
-            if not isinstance(it, str):
+            if not (isinstance(it, str) and it):
                 continue
             if it[-1] in WHITESPACE_EXCLUDE_NEWLINE:
                 modified_motd[i] = it = it.rstrip(WHITESPACE_EXCLUDE_NEWLINE)
