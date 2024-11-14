@@ -139,7 +139,7 @@ plugins = [
 
 ### `MCSTAT_FONT` - 使用的字体名称 / 路径
 
-默认：`unifont`
+默认：`["unifont"]`
 
 请按需自行更改
 
@@ -229,6 +229,11 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 感谢大家的赞助！你们的赞助将是我继续创作的动力！
 
 ## 📝 更新日志
+
+### 0.7.0
+
+- 适配 pil-utils 0.2
+- 更改配置项 `MCSTAT_FONT` 类型为 `List[str]`（`str` 仍然受支持）
 
 ### 0.6.3
 

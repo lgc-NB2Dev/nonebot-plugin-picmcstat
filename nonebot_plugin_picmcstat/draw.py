@@ -1,6 +1,5 @@
 import base64
 import socket
-from asyncio.exceptions import TimeoutError
 from functools import partial
 from io import BytesIO
 from typing import Any, List, Optional, Sequence, Tuple, Union, cast
@@ -14,7 +13,7 @@ from nonebot import get_driver
 from nonebot.log import logger
 from PIL.Image import Resampling
 from pil_utils import BuildImage, Text2Image
-from pil_utils.types import ColorType
+from pil_utils.typing import ColorType
 
 from .config import config
 from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
@@ -25,6 +24,7 @@ from .util import (
     format_mod_list,
     get_latency_color,
     resolve_ip,
+    split_motd_lines,
     trim_motd,
 )
 
@@ -34,7 +34,7 @@ TITLE_FONT_SIZE = 8 * 5
 EXTRA_FONT_SIZE = 8 * 4
 EXTRA_STROKE_WIDTH = 2
 STROKE_RATIO = 0.0625
-EXTRA_SPACING = 12
+SPACING = 12
 LIST_GAP = 32
 
 JE_HEADER = "[MCJE服务器信息]"
@@ -46,28 +46,38 @@ ImageType: TypeAlias = Union[BuildImage, Text2Image, "ImageGrid"]
 
 def ex_default_style(text: str, color_code: str = "", **kwargs) -> Text2Image:
     default_kwargs = {
-        "fontsize": EXTRA_FONT_SIZE,
+        "font_size": EXTRA_FONT_SIZE,
         "fill": CODE_COLOR[color_code or "f"],
-        "fontname": config.mcstat_font,
+        "font_families": config.mcstat_font,
         "stroke_ratio": STROKE_RATIO,
         "stroke_fill": STROKE_COLOR[color_code or "f"],
-        "spacing": EXTRA_SPACING,
+        # "spacing": EXTRA_SPACING,
     }
     default_kwargs.update(kwargs)
     return Text2Image.from_bbcode_text(text, **default_kwargs)
 
 
-def calc_offset(*pos: Tuple[int, int]) -> Tuple[int, int]:
+def calc_offset(*pos: Tuple[float, float]) -> Tuple[float, float]:
     return (sum(x[0] for x in pos), sum(x[1] for x in pos))
 
 
-def draw_image_type_on(bg: BuildImage, it: ImageType, pos: Tuple[int, int]):
+def draw_image_type_on(bg: BuildImage, it: ImageType, pos: Tuple[float, float]):
     if isinstance(it, ImageGrid):
         it.draw_on(bg, pos)
     elif isinstance(it, Text2Image):
         it.draw_on_image(bg.image, pos)
     else:
-        bg.paste(it, pos, alpha=True)
+        bg.paste(
+            it,
+            tuple(round(x) for x in pos),  # type: ignore
+            alpha=True,
+        )
+
+
+def width(obj: ImageType) -> float:
+    if isinstance(obj, Text2Image):
+        return obj.longest_line
+    return obj.width
 
 
 class ImageLine:
@@ -86,16 +96,16 @@ class ImageLine:
         self.gap = gap
 
     @property
-    def width(self) -> int:
-        rw = self.right.width if self.right else 0
-        return self.left.width + self.gap + rw
+    def width(self) -> float:
+        rw = width(self.right) if self.right else 0
+        return width(self.left) + self.gap + rw
 
     @property
-    def height(self) -> int:
+    def height(self) -> float:
         return max(self.left.height, (self.right.height if self.right else 0))
 
     @property
-    def size(self) -> Tuple[int, int]:
+    def size(self) -> Tuple[float, float]:
         return self.width, self.height
 
 
@@ -103,7 +113,7 @@ class ImageGrid(List[ImageLine]):
     def __init__(
         self,
         *lines: ImageLine,
-        spacing: int = 6,
+        spacing: int = SPACING,
         gap: Optional[int] = None,
         align_items: bool = True,
     ):
@@ -121,35 +131,40 @@ class ImageGrid(List[ImageLine]):
         )
 
     @property
-    def width(self) -> int:
+    def width(self) -> float:
         return (
             (
-                max(x.left.width for x in self)
-                + max((x.right.width + x.gap if x.right else 0) for x in self)
+                max(width(x.left) for x in self)
+                + max((width(x.right) + x.gap if x.right else 0) for x in self)
             )
             if self.align_items
             else max(x.width for x in self)
         )
 
     @property
-    def height(self) -> int:
+    def height(self) -> float:
         return sum(x.height for x in self) + self.spacing * (len(self) - 1)
 
     @property
-    def size(self) -> Tuple[int, int]:
+    def size(self) -> Tuple[float, float]:
         return self.width, self.height
 
     def append_line(self, *args, **kwargs):
         self.append(ImageLine(*args, **kwargs))
 
-    def draw_on(self, bg: BuildImage, offset_pos: Tuple[int, int]) -> None:
-        max_lw = max(x.left.width for x in self) if self.align_items else None
+    def draw_on(self, bg: BuildImage, offset_pos: Tuple[float, float]) -> None:
+        max_lw = max(width(x.left) for x in self) if self.align_items else None
         y_offset = 0
         for line in self:
+            line_height = line.height
             draw_image_type_on(
                 bg,
                 line.left,
-                calc_offset(offset_pos, (0, y_offset)),
+                calc_offset(
+                    offset_pos,
+                    (0, y_offset),
+                    (0, (line_height - line.left.height)),
+                ),
             )
             if line.right:
                 draw_image_type_on(
@@ -157,19 +172,21 @@ class ImageGrid(List[ImageLine]):
                     line.right,
                     calc_offset(
                         offset_pos,
-                        ((max_lw or line.left.width) + line.gap, y_offset),
+                        ((max_lw or width(line.left)) + line.gap, y_offset),
+                        (0, (line_height - line.right.height)),
                     ),
                 )
-            y_offset += line.height + self.spacing
+            y_offset += line_height + self.spacing
 
     def to_image(
         self,
         background: Optional[ColorType] = None,
         padding: int = 2,
     ) -> BuildImage:
+        size = calc_offset(self.size, (padding * 2, padding * 2))
         bg = BuildImage.new(
             "RGBA",
-            calc_offset(self.size, (padding * 2, padding * 2)),
+            tuple(round(x) for x in size),  # type: ignore
             background or (0, 0, 0, 0),
         )
         self.draw_on(bg, (padding, padding))
@@ -208,13 +225,13 @@ def build_img(
     header_height = 128
     half_header_height = int(header_height / 2)
 
-    bg_width = extra.width + MARGIN * 2 if extra else MIN_WIDTH
+    bg_width = width(extra) + MARGIN * 2 if extra else MIN_WIDTH
     bg_height = header_height + MARGIN * 2
     if bg_width < MIN_WIDTH:
         bg_width = MIN_WIDTH
     if extra:
         bg_height += extra.height + int(MARGIN / 2)
-    bg = draw_bg(bg_width, bg_height)
+    bg = draw_bg(round(bg_width), round(bg_height))
 
     if icon.size != (header_height, header_height):
         icon = icon.resize_height(
@@ -235,7 +252,7 @@ def build_img(
         halign="left",
         fill=header_text_color,
         max_fontsize=TITLE_FONT_SIZE,
-        fontname=config.mcstat_font,
+        font_families=config.mcstat_font,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=header_stroke_color,
     )
@@ -250,7 +267,7 @@ def build_img(
         halign="left",
         fill=header_text_color,
         max_fontsize=TITLE_FONT_SIZE,
-        fontname=config.mcstat_font,
+        font_families=config.mcstat_font,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=header_stroke_color,
     )
@@ -275,7 +292,11 @@ def draw_help(svr_type: ServerType) -> BytesIO:
 
 def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
     transformer = BBCodeTransformer(bedrock=res.motd.bedrock)
-    motd = transformer.transform(trim_motd(res.motd.parsed))
+    # there're no line spacing in Text2Image since pil-utils 0.2.0
+    # so we split lines there then manually add the space
+    motd = (
+        transformer.transform(x) for x in split_motd_lines(trim_motd(res.motd.parsed))
+    )
     online_percent = (
         "{:.2f}".format(res.players.online / res.players.max * 100)
         if res.players.max
@@ -292,7 +313,8 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
 
     l_style = partial(ex_default_style, color_code="7")
     grid = ImageGrid(align_items=False)
-    grid.append_line(motd)
+    for line in motd:
+        grid.append_line(line)
     if config.mcstat_show_addr:
         grid.append_line(l_style("测试地址: "), addr)
     grid.append_line(l_style("服务端名: "), res.version.name)
@@ -341,7 +363,9 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
 
 def draw_bedrock(res: BedrockStatusResponse, addr: str) -> BytesIO:
     transformer = BBCodeTransformer(bedrock=res.motd.bedrock)
-    motd = transformer.transform(trim_motd(res.motd.parsed))
+    motd = (
+        transformer.transform(x) for x in split_motd_lines(trim_motd(res.motd.parsed))
+    )
     online_percent = (
         "{:.2f}".format(int(res.players_online) / int(res.players_max) * 100)
         if res.players_max
@@ -350,7 +374,8 @@ def draw_bedrock(res: BedrockStatusResponse, addr: str) -> BytesIO:
 
     l_style = partial(ex_default_style, color_code="7")
     grid = ImageGrid(align_items=False)
-    grid.append_line(motd)
+    for line in motd:
+        grid.append_line(line)
     if config.mcstat_show_addr:
         grid.append_line(l_style("测试地址: "), addr)
     grid.append_line(l_style("协议版本: "), str(res.version.protocol))

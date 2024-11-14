@@ -7,9 +7,10 @@ dependencies = [
     "nonebot2>=2.3.3",
     "nonebot-plugin-alconna>=0.52.3",
     "mcstatus>=11.1.1",
-    "pil-utils>=0.1.12",
+    "pil-utils>=0.2.1",
     "punycode>=0.2.1",
     "dnspython>=2.6.1",
+    "cookit[pydantic]>=0.8.1",
 ]
 requires-python = ">=3.9,<4.0"
 readme = "README.md"

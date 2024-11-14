@@ -173,6 +173,58 @@ def trim_motd(motd: List[ParsedMotdComponent]) -> List[ParsedMotdComponent]:
     return [x for x in modified_motd if x]
 
 
+def split_motd_lines(motd: Sequence[ParsedMotdComponent]):
+    lines: List[List[ParsedMotdComponent]] = []
+
+    current_line: List[ParsedMotdComponent] = []
+    using_color: Union[MinecraftColor, WebColor, None] = None
+    using_formats: List[Formatting] = []
+
+    for comp in motd:
+        if isinstance(comp, str) and "\n" in comp:
+            # not fully tested, lazy to do
+            str_lines = comp.split("\n")
+
+            last_line = ""
+            if len(str_lines) > 1:
+                last_line = str_lines[-1]
+                str_lines = str_lines[:-1]
+
+            for line in str_lines:
+                if line:
+                    current_line.append(line)
+                current_line.append(Formatting.RESET)
+                lines.append(current_line)
+
+                current_line = []
+                if using_color:
+                    current_line.append(using_color)
+                if using_formats:
+                    current_line.extend(using_formats)
+
+            if last_line:
+                current_line.append(last_line)
+
+            continue
+
+        if isinstance(comp, (MinecraftColor, WebColor)):
+            using_color = comp
+
+        elif isinstance(comp, Formatting):
+            if comp is Formatting.RESET:
+                using_color = None
+                using_formats = []
+            else:
+                using_formats.append(comp)
+
+        current_line.append(comp)
+
+    if current_line:
+        lines.append(current_line)
+
+    return lines
+
+
 class BBCodeTransformer(PlainTransformer):
     def __init__(self, *, bedrock: bool = False) -> None:
         self.bedrock = bedrock
@@ -183,7 +235,7 @@ class BBCodeTransformer(PlainTransformer):
         return super().transform(motd_components)
 
     def _format_output(self, results: list[str]) -> str:
-        text = super()._format_output(results) + "".join(self.on_reset)
+        text = super()._format_output(results) + "".join(reversed(self.on_reset))
         return re.sub(
             OBFUSCATED_PLACEHOLDER_REGEX,
             lambda m: (random_char(len(i)) if (i := m.group("inner")) else ""),

@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 
+from cookit.pyd import field_validator
 from nonebot import get_plugin_config
 from pydantic import BaseModel, Field
 
@@ -14,7 +15,7 @@ class ShortcutType(BaseModel):
 
 
 class ConfigClass(BaseModel):
-    mcstat_font: str = "unifont"
+    mcstat_font: List[str] = ["unifont"]
     mcstat_show_addr: bool = False
     mcstat_show_delay: bool = True
     mcstat_show_mods: bool = False
@@ -23,6 +24,10 @@ class ConfigClass(BaseModel):
     mcstat_resolve_dns: bool = True
     mcstat_query_twice: bool = True
     mcstat_java_protocol_version: int = 767
+
+    @field_validator("mcstat_font", mode="before")
+    def transform_to_list(cls, v: Any):  # noqa: N805
+        return v if isinstance(v, list) else [v]
 
 
 config = get_plugin_config(ConfigClass)
