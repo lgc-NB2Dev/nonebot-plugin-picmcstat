@@ -15,7 +15,7 @@ class ShortcutType(BaseModel):
 
 
 class ConfigClass(BaseModel):
-    mcstat_font: list[str] = ["unifont"]
+    mcstat_font: list[str] = ["Minecraft Seven", "unifont"]
     mcstat_show_addr: bool = False
     mcstat_show_delay: bool = True
     mcstat_show_mods: bool = False

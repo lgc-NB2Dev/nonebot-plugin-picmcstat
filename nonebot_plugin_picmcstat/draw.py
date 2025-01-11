@@ -38,7 +38,7 @@ EXTRA_FONT_SIZE = 8 * 4
 EXTRA_STROKE_WIDTH = 2
 STROKE_RATIO = 0.0625
 SPACING = 12
-LIST_GAP = 32
+LIST_GAP = 12
 
 JE_HEADER = "[MCJE服务器信息]"
 BE_HEADER = "[MCBE服务器信息]"
@@ -88,7 +88,7 @@ class ImageLine:
         self,
         left: Union[ImageType, str],
         right: Union[ImageType, str, None] = None,
-        gap: int = 0,
+        gap: int = LIST_GAP,
     ):
         self.left = ex_default_style(left) if isinstance(left, str) else left
         self.right = (
@@ -135,13 +135,8 @@ class ImageGrid(list[ImageLine]):
 
     @property
     def width(self) -> float:
-        return (
-            (
-                max(width(x.left) for x in self)
-                + max((width(x.right) + x.gap if x.right else 0) for x in self)
-            )
-            if self.align_items
-            else max(x.width for x in self)
+        return max(width(x.left) for x in self) + max(
+            (width(x.right) + x.gap if x.right else 0) for x in self
         )
 
     @property
@@ -166,7 +161,7 @@ class ImageGrid(list[ImageLine]):
                 calc_offset(
                     offset_pos,
                     (0, y_offset),
-                    (0, (line_height - line.left.height)),
+                    # (0, (line_height - line.left.height)),
                 ),
             )
             if line.right:
@@ -176,7 +171,7 @@ class ImageGrid(list[ImageLine]):
                     calc_offset(
                         offset_pos,
                         ((max_lw or width(line.left)) + line.gap, y_offset),
-                        (0, (line_height - line.right.height)),
+                        # (0, (line_height - line.right.height)),
                     ),
                 )
             y_offset += line_height + self.spacing
@@ -341,7 +336,7 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
     if mod_list and config.mcstat_show_mods:
         grid.append_line(
             l_style("Mod 列表: "),
-            ImageGrid.from_list(mod_list, gap=LIST_GAP),
+            ImageGrid.from_list(mod_list),
         )
     if res.players.sample:
         grid.append_line(
@@ -351,7 +346,6 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
                     transformer.transform(Motd.parse(x.name).parsed)
                     for x in res.players.sample
                 ],
-                gap=LIST_GAP,
             ),
         )
 

@@ -130,6 +130,7 @@ plugins = [
 ### 字体
 
 字体文件请自行去自行去 [这里](http://ftp.gnu.org/gnu/unifont/unifont-15.0.01/unifont-15.0.01.ttf) 下载
+如需将英文部分变为游戏内字体，请另外下载安装 [这个](https://resources.download.minecraft.net/3d/3d009535ec7860c29603cd66cdb4db5c8b4aefd2) 字体（请自行修改文件扩展名为 `.ttf`）
 
 将字体文件直接安装在系统中即可  
 如果不行，请尝试右键字体文件点击 `为所有用户安装`  
@@ -139,7 +140,7 @@ plugins = [
 
 ### `MCSTAT_FONT` - 使用的字体名称 / 路径
 
-默认：`["unifont"]`
+默认：`["Minecraft Seven", "unifont"]`
 
 请按需自行更改
 
@@ -229,6 +230,10 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 感谢大家的赞助！你们的赞助将是我继续创作的动力！
 
 ## 📝 更新日志
+
+### 0.7.1
+
+- 修复文字下对齐的 Bug
 
 ### 0.7.0
 
