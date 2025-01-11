@@ -1,7 +1,8 @@
 import random
 import re
 import string
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple, TypeVar, Union, cast
+from collections.abc import Iterator, Sequence
+from typing import Optional, TypeVar, Union, cast
 
 import dns.asyncresolver
 import dns.name
@@ -54,8 +55,8 @@ def replace_format_code(txt: str, new_str: str = "") -> str:
     return re.sub(FORMAT_CODE_REGEX, new_str, txt)
 
 
-def format_mod_list(li: List[Union[Dict, str]]) -> List[str]:
-    def mapping_func(it: Union[Dict, str]) -> Optional[str]:
+def format_mod_list(li: list[Union[dict, str]]) -> list[str]:
+    def mapping_func(it: Union[dict, str]) -> Optional[str]:
         if isinstance(it, str):
             return it
         if isinstance(it, dict) and (name := it.get("modid")):
@@ -68,7 +69,7 @@ def format_mod_list(li: List[Union[Dict, str]]) -> List[str]:
 
 async def resolve_host(
     host: str,
-    data_types: Optional[List[rd.RdataType]] = None,
+    data_types: Optional[list[rd.RdataType]] = None,
 ) -> Optional[str]:
     data_types = data_types or [rd.CNAME, rd.AAAA, rd.A]
     for rd_type in data_types:
@@ -88,14 +89,14 @@ async def resolve_host(
     return None
 
 
-async def resolve_srv(host: str) -> Tuple[str, int]:
+async def resolve_srv(host: str) -> tuple[str, int]:
     host = "_minecraft._tcp." + host
     resp = await DNS_RESOLVER.resolve(host, rd.SRV)
     answer = cast(SRVRecordAnswer, resp[0])
     return str(answer.target), int(answer.port)
 
 
-async def resolve_ip(ip: str, srv: bool = False) -> Tuple[str, Optional[int]]:
+async def resolve_ip(ip: str, srv: bool = False) -> tuple[str, Optional[int]]:
     if ":" in ip:
         host, port = ip.split(":", maxsplit=1)
     else:
@@ -124,8 +125,8 @@ def chunks(lst: Sequence[T], n: int) -> Iterator[Sequence[T]]:
 
 
 # shit code
-def trim_motd(motd: List[ParsedMotdComponent]) -> List[ParsedMotdComponent]:
-    modified_motd: List[ParsedMotdComponent] = []
+def trim_motd(motd: list[ParsedMotdComponent]) -> list[ParsedMotdComponent]:
+    modified_motd: list[ParsedMotdComponent] = []
 
     in_content = False
     for comp in motd:
@@ -174,11 +175,11 @@ def trim_motd(motd: List[ParsedMotdComponent]) -> List[ParsedMotdComponent]:
 
 
 def split_motd_lines(motd: Sequence[ParsedMotdComponent]):
-    lines: List[List[ParsedMotdComponent]] = []
+    lines: list[list[ParsedMotdComponent]] = []
 
-    current_line: List[ParsedMotdComponent] = []
+    current_line: list[ParsedMotdComponent] = []
     using_color: Union[MinecraftColor, WebColor, None] = None
-    using_formats: List[Formatting] = []
+    using_formats: list[Formatting] = []
 
     for comp in motd:
         if isinstance(comp, str) and "\n" in comp:

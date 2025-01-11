@@ -1,19 +1,18 @@
 import base64
 import socket
+from collections.abc import Sequence
 from functools import partial
 from io import BytesIO
-from typing import Any, List, Optional, Sequence, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Optional, Union, cast
 from typing_extensions import TypeAlias
 
 from mcstatus import BedrockServer, JavaServer
-from mcstatus.bedrock_status import BedrockStatusResponse
 from mcstatus.motd import Motd
 from mcstatus.status_response import JavaStatusResponse
 from nonebot import get_driver
 from nonebot.log import logger
 from PIL.Image import Resampling
 from pil_utils import BuildImage, Text2Image
-from pil_utils.typing import ColorType
 
 from .config import config
 from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
@@ -27,6 +26,10 @@ from .util import (
     split_motd_lines,
     trim_motd,
 )
+
+if TYPE_CHECKING:
+    from mcstatus.bedrock_status import BedrockStatusResponse
+    from pil_utils.typing import ColorType
 
 MARGIN = 32
 MIN_WIDTH = 512
@@ -57,11 +60,11 @@ def ex_default_style(text: str, color_code: str = "", **kwargs) -> Text2Image:
     return Text2Image.from_bbcode_text(text, **default_kwargs)
 
 
-def calc_offset(*pos: Tuple[float, float]) -> Tuple[float, float]:
+def calc_offset(*pos: tuple[float, float]) -> tuple[float, float]:
     return (sum(x[0] for x in pos), sum(x[1] for x in pos))
 
 
-def draw_image_type_on(bg: BuildImage, it: ImageType, pos: Tuple[float, float]):
+def draw_image_type_on(bg: BuildImage, it: ImageType, pos: tuple[float, float]):
     if isinstance(it, ImageGrid):
         it.draw_on(bg, pos)
     elif isinstance(it, Text2Image):
@@ -105,11 +108,11 @@ class ImageLine:
         return max(self.left.height, (self.right.height if self.right else 0))
 
     @property
-    def size(self) -> Tuple[float, float]:
+    def size(self) -> tuple[float, float]:
         return self.width, self.height
 
 
-class ImageGrid(List[ImageLine]):
+class ImageGrid(list[ImageLine]):
     def __init__(
         self,
         *lines: ImageLine,
@@ -126,7 +129,7 @@ class ImageGrid(List[ImageLine]):
     @classmethod
     def from_list(cls, li: Sequence[Union[ImageType, str]], **kwargs) -> "ImageGrid":
         return cls(
-            *(ImageLine(*cast(Tuple[Any, Any], x)) for x in chunks(li, 2)),
+            *(ImageLine(*cast(tuple[Any, Any], x)) for x in chunks(li, 2)),
             **kwargs,
         )
 
@@ -146,13 +149,13 @@ class ImageGrid(List[ImageLine]):
         return sum(x.height for x in self) + self.spacing * (len(self) - 1)
 
     @property
-    def size(self) -> Tuple[float, float]:
+    def size(self) -> tuple[float, float]:
         return self.width, self.height
 
     def append_line(self, *args, **kwargs):
         self.append(ImageLine(*args, **kwargs))
 
-    def draw_on(self, bg: BuildImage, offset_pos: Tuple[float, float]) -> None:
+    def draw_on(self, bg: BuildImage, offset_pos: tuple[float, float]) -> None:
         max_lw = max(width(x.left) for x in self) if self.align_items else None
         y_offset = 0
         for line in self:
@@ -180,7 +183,7 @@ class ImageGrid(List[ImageLine]):
 
     def to_image(
         self,
-        background: Optional[ColorType] = None,
+        background: Optional["ColorType"] = None,
         padding: int = 2,
     ) -> BuildImage:
         size = calc_offset(self.size, (padding * 2, padding * 2))
@@ -227,8 +230,7 @@ def build_img(
 
     bg_width = width(extra) + MARGIN * 2 if extra else MIN_WIDTH
     bg_height = header_height + MARGIN * 2
-    if bg_width < MIN_WIDTH:
-        bg_width = MIN_WIDTH
+    bg_width = max(bg_width, MIN_WIDTH)
     if extra:
         bg_height += extra.height + int(MARGIN / 2)
     bg = draw_bg(round(bg_width), round(bg_height))
@@ -298,13 +300,13 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
         transformer.transform(x) for x in split_motd_lines(trim_motd(res.motd.parsed))
     )
     online_percent = (
-        "{:.2f}".format(res.players.online / res.players.max * 100)
+        f"{res.players.online / res.players.max * 100:.2f}"
         if res.players.max
         else "?.??"
     )
 
     mod_svr_type: Optional[str] = None
-    mod_list: Optional[List[str]] = None
+    mod_list: Optional[list[str]] = None
     if mod_info := res.raw.get("modinfo"):
         if tmp := mod_info.get("type"):
             mod_svr_type = tmp
@@ -361,13 +363,13 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
     return build_img(JE_HEADER, SUCCESS_TITLE, icon=icon, extra=grid)
 
 
-def draw_bedrock(res: BedrockStatusResponse, addr: str) -> BytesIO:
+def draw_bedrock(res: "BedrockStatusResponse", addr: str) -> BytesIO:
     transformer = BBCodeTransformer(bedrock=res.motd.bedrock)
     motd = (
         transformer.transform(x) for x in split_motd_lines(trim_motd(res.motd.parsed))
     )
     online_percent = (
-        "{:.2f}".format(int(res.players_online) / int(res.players_max) * 100)
+        f"{int(res.players_online) / int(res.players_max) * 100:.2f}"
         if res.players_max
         else "?.??"
     )
@@ -415,7 +417,7 @@ def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
 
 
 def draw_resp(
-    resp: Union[JavaStatusResponse, BedrockStatusResponse],
+    resp: Union[JavaStatusResponse, "BedrockStatusResponse"],
     addr: str,
 ) -> BytesIO:
     if isinstance(resp, JavaStatusResponse):
