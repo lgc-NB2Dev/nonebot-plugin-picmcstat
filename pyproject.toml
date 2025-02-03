@@ -4,13 +4,13 @@ dynamic = ["version"]
 description = "A NoneBot2 plugin generates a pic from a Minecraft server's MOTD"
 authors = [{ name = "LgCookie", email = "lgc2333@126.com" }]
 dependencies = [
-    "nonebot2>=2.3.3",
-    "nonebot-plugin-alconna>=0.52.3",
+    "nonebot2>=2.4.1",
+    "nonebot-plugin-alconna>=0.54.2",
     "mcstatus>=11.1.1",
-    "pil-utils>=0.2.1",
+    "pil-utils>=0.2.2",
     "punycode>=0.2.1",
-    "dnspython>=2.6.1",
-    "cookit[pydantic]>=0.8.1",
+    "dnspython>=2.7.0",
+    "cookit[pydantic]>=0.9.3",
 ]
 requires-python = ">=3.9,<4.0"
 readme = "README.md"
