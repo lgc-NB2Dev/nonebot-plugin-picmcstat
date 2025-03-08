@@ -5,7 +5,7 @@ require("nonebot_plugin_alconna")
 from . import __main__ as __main__  # noqa: E402
 from .config import ConfigClass  # noqa: E402
 
-__version__ = "0.7.1"
+__version__ = "0.7.2"
 __plugin_meta__ = PluginMetadata(
     name="PicMCStat",
     description="将一个 Minecraft 服务器的 MOTD 信息绘制为一张图片",
