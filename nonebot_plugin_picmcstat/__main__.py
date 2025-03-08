@@ -30,12 +30,13 @@ async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
 motdpe_matcher = on_command(
     "motdpe",
     aliases={"motdbe", "!motdpe", "！motdpe", "!motdbe", "！motdbe"},
+    priority=98,
     state={"svr_type": "be"},
 )
 motd_matcher = on_command(
     "motd",
     aliases={"!motd", "！motd", "motdje", "!motdje", "！motdje"},
-    priority=2,
+    priority=99,
     state={"svr_type": "je"},
 )
 
@@ -59,7 +60,7 @@ def append_shortcut_handler(shortcut: ShortcutType):
     async def handler():
         await finish_with_query(shortcut.host, shortcut.type)
 
-    on_regex(shortcut.regex, rule=rule).append_handler(handler)
+    on_regex(shortcut.regex, rule=rule, priority=99).append_handler(handler)
 
 
 def startup():
