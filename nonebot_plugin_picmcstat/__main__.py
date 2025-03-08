@@ -30,7 +30,7 @@ async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
 motdpe_matcher = on_command(
     "motdpe",
     aliases={"motdbe", "!motdpe", "！motdpe", "!motdbe", "！motdbe"},
-    priority=99,
+    priority=98,
     state={"svr_type": "be"},
 )
 motd_matcher = on_command(
