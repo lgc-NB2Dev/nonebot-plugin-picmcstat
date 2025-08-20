@@ -363,8 +363,8 @@ def draw_bedrock(res: "BedrockStatusResponse", addr: str) -> BytesIO:
         transformer.transform(x) for x in split_motd_lines(trim_motd(res.motd.parsed))
     )
     online_percent = (
-        f"{int(res.players_online) / int(res.players_max) * 100:.2f}"
-        if res.players_max
+        f"{int(res.players.online) / int(res.players.max) * 100:.2f}"
+        if res.players.max
         else "?.??"
     )
 
@@ -380,8 +380,8 @@ def draw_bedrock(res: "BedrockStatusResponse", addr: str) -> BytesIO:
         l_style("当前人数: "),
         f"{res.players.online}/{res.players.max} ({online_percent}%)",
     )
-    if res.map:
-        grid.append_line(l_style("存档名称: "), res.map)
+    if res.map_name:
+        grid.append_line(l_style("存档名称: "), res.map_name)
     if res.gamemode:
         grid.append_line(
             l_style("游戏模式: "),
