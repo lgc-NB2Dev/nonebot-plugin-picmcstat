@@ -208,7 +208,8 @@ MCSTAT_SHORTCUTS='
 
 发送 `motd` 指令 查看使用指南
 
-![usage](https://raw.githubusercontent.com/lgc-NB2Dev/readme/main/picmcstat/usage.png)
+![usage](https://github.com/user-attachments/assets/e7d81735-913b-4483-bda8-3dfb896360c9)
+
 
 ## 📞 联系
 
