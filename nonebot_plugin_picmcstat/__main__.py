@@ -65,8 +65,6 @@ async def _(arg_msg: Message = CommandArg()):
     try:
         host, port = await resolve_ip(arg, srv=True)
         svr = JavaServer(host, port)
-        if config.mcstat_query_twice:
-            await svr.async_status()
         await svr.async_status()
         await finish_with_query(arg, "je")
     except FinishedException:
@@ -75,8 +73,6 @@ async def _(arg_msg: Message = CommandArg()):
         try:
             host, port = await resolve_ip(arg)
             svr = BedrockServer(host, port)
-            if config.mcstat_query_twice:
-                await svr.async_status()
             await svr.async_status()
             await finish_with_query(arg, "be")
         except FinishedException:
