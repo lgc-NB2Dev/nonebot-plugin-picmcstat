@@ -28,6 +28,7 @@ async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
     await msg.send(reply_to=config.mcstat_reply_target)
     raise FinishedException
 
+
 motd_matcher = on_command(
     "motd",
     aliases={"!motd", "！motd"},
@@ -62,7 +63,7 @@ async def _(arg_msg: Message = CommandArg()):
         await finish_with_query("", "je")
 
     try:
-        host, port = await resolve_ip(arg, is_java=True)
+        host, port = await resolve_ip(arg, srv=True)
         svr = JavaServer(host, port)
         if config.mcstat_query_twice:
             await svr.async_status()
@@ -70,7 +71,7 @@ async def _(arg_msg: Message = CommandArg()):
         await finish_with_query(arg, "je")
     except Exception:
         try:
-            host, port = await resolve_ip(arg, is_java=False)
+            host, port = await resolve_ip(arg)
             svr = BedrockServer(host, port)
             if config.mcstat_query_twice:
                 await svr.async_status()
