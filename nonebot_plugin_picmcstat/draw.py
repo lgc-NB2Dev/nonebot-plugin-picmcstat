@@ -283,7 +283,7 @@ def draw_help(svr_type: ServerType) -> BytesIO:
     cmd_prefix_li = list(get_driver().config.command_start)
     prefix = cmd_prefix_li[0] if cmd_prefix_li else ""
 
-    extra_txt = f"查询Java版服务器: {prefix}motd <服务器IP>\n查询基岩版服务器: {prefix}motdpe <服务器IP>"
+    extra_txt = f"查询服务器(自动判断类型): {prefix}motd <服务器IP:端口>\n查询Java版服务器: {prefix}motdje <服务器IP:端口>\n查询基岩版服务器: {prefix}motdpe <服务器IP:端口>"
     return build_img(get_header_by_svr_type(svr_type), "使用帮助", extra=extra_txt)
 
 
