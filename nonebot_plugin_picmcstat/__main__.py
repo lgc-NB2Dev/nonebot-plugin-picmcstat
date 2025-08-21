@@ -69,6 +69,8 @@ async def _(arg_msg: Message = CommandArg()):
             await svr.async_status()
         await svr.async_status()
         await finish_with_query(arg, "je")
+    except FinishedException:
+        raise
     except Exception:
         try:
             host, port = await resolve_ip(arg)
@@ -77,6 +79,8 @@ async def _(arg_msg: Message = CommandArg()):
                 await svr.async_status()
             await svr.async_status()
             await finish_with_query(arg, "be")
+        except FinishedException:
+            raise
         except Exception:
             await UniMessage("查询失败，服务器可能未开启或地址错误").send(
                 reply_to=config.mcstat_reply_target
