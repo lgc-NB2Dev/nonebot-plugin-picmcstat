@@ -78,7 +78,7 @@ async def _(arg_msg: Message = CommandArg()):
         except FinishedException:
             raise
         except Exception:
-            await UniMessage("查询失败，请尝试使用其他命令获取详细信息").send(
+            await UniMessage("查询失败，无法连接服务器，请尝试使用其他命令获取详细信息").send(
                 reply_to=config.mcstat_reply_target
             )
             raise FinishedException
