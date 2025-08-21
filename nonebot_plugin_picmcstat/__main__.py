@@ -9,6 +9,8 @@ from nonebot_plugin_alconna.uniseg import UniMessage
 
 from .config import ShortcutType, config
 from .draw import ServerType, draw
+from mcstatus import BedrockServer, JavaServer
+from .util import resolve_ip
 
 try:
     from nonebot.adapters.onebot.v11 import GroupMessageEvent as OB11GroupMessageEvent
@@ -26,27 +28,59 @@ async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
     await msg.send(reply_to=config.mcstat_reply_target)
     raise FinishedException
 
-
+motd_matcher = on_command(
+    "motd",
+    aliases={"!motd", "！motd"},
+    priority=97,
+)
 motdpe_matcher = on_command(
     "motdpe",
     aliases={"motdbe", "!motdpe", "！motdpe", "!motdbe", "！motdbe"},
     priority=98,
     state={"svr_type": "be"},
 )
-motd_matcher = on_command(
-    "motd",
-    aliases={"!motd", "！motd", "motdje", "!motdje", "！motdje"},
+motdje_matcher = on_command(
+    "motdje",
+    aliases={"!motdje", "！motdje"},
     priority=99,
     state={"svr_type": "je"},
 )
 
 
-@motd_matcher.handle()
+@motdje_matcher.handle()
 @motdpe_matcher.handle()
 async def _(state: T_State, arg_msg: Message = CommandArg()):
     arg = arg_msg.extract_plain_text().strip()
     svr_type: ServerType = state["svr_type"]
     await finish_with_query(arg, svr_type)
+
+
+@motd_matcher.handle()
+async def _(arg_msg: Message = CommandArg()):
+    arg = arg_msg.extract_plain_text().strip()
+    if not arg:
+        await finish_with_query("", "je")
+
+    try:
+        host, port = await resolve_ip(arg, is_java=True)
+        svr = JavaServer(host, port)
+        if config.mcstat_query_twice:
+            await svr.async_status()
+        await svr.async_status()
+        await finish_with_query(arg, "je")
+    except Exception:
+        try:
+            host, port = await resolve_ip(arg, is_java=False)
+            svr = BedrockServer(host, port)
+            if config.mcstat_query_twice:
+                await svr.async_status()
+            await svr.async_status()
+            await finish_with_query(arg, "be")
+        except Exception:
+            await UniMessage("查询失败，服务器可能未开启或地址错误").send(
+                reply_to=config.mcstat_reply_target
+            )
+            raise FinishedException
 
 
 def append_shortcut_handler(shortcut: ShortcutType):
