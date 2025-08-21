@@ -78,7 +78,7 @@ async def _(arg_msg: Message = CommandArg()):
         except FinishedException:
             raise
         except Exception:
-            await UniMessage("查询失败，服务器可能未开启或地址错误").send(
+            await UniMessage("查询失败，请尝试使用其他命令获取详细信息").send(
                 reply_to=config.mcstat_reply_target
             )
             raise FinishedException
