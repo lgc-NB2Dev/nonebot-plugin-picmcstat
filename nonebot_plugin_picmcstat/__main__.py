@@ -81,6 +81,7 @@ async def _(arg_msg: Message = CommandArg()):
             await UniMessage("查询失败，无法连接服务器，请尝试使用其他命令获取详细信息").send(
                 reply_to=config.mcstat_reply_target
             )
+            await finish_with_query("", "je") //返回help_msg图片
             raise FinishedException
 
 
