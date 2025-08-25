@@ -1,9 +1,10 @@
 import re
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from mcstatus.motd.components import Formatting, MinecraftColor
 
-ServerType = Literal["je", "be"]
+ServerTypeRaw: TypeAlias = Literal["je", "be"]
+ServerType: TypeAlias = Literal[ServerTypeRaw, "auto"]
 
 CODE_COLOR = {
     "0": "#000000",

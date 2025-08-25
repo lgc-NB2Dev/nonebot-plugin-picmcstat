@@ -172,7 +172,7 @@ plugins = [
   （注意，nb2 以 JSON 格式解析配置项，所以当你要在正则表达式里表示`\`时，你需要将其转义为`\\`）
 - `host` - 要查询的服务器地址，格式为 `<IP>[:端口]`，  
   例如 `hypixel.net` 或 `example.com:1919`
-- `type` - 要查询服务器的类型，`je` 表示 Java 版服，`be` 表示基岩版服
+- `type` - 要查询服务器的类型，`je` 表示 Java 版服，`be` 表示基岩版服，`auto` 代表自动检测
 - `whitelist` - （仅支持 OneBot V11 适配器）群聊白名单，只有里面列出的群号可以查询，可以不填来对所有群开放查询
 
 最终的配置项看起来是这样子的，当你发送 `查服` 时，机器人会把 EaseCation 服务器的状态发送出来
@@ -204,6 +204,12 @@ MCSTAT_SHORTCUTS='
 
 默认：`767`
 
+### `MCSTAT_ENABLE_AUTO_DETECT` - 是否在使用未指定服务器类型的 `motd` 指令时自动检测
+
+默认：`True`
+
+如设为 `False` 将默认指定为 Java 版
+
 ## 🎉 使用
 
 发送 `motd` 指令 查看使用指南
@@ -230,6 +236,10 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 感谢大家的赞助！你们的赞助将是我继续创作的动力！
 
 ## 📝 更新日志
+
+### 0.8.0
+
+- 加入自动检测服务器类型的功能，默认启用（Thanks to [#28](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/pull/28)）
 
 ### 0.7.1
 

@@ -3,7 +3,7 @@ from typing import NoReturn
 from nonebot import logger, on_command, on_regex
 from nonebot.adapters import Event as BaseEvent, Message
 from nonebot.exception import FinishedException
-from nonebot.params import CommandArg
+from nonebot.params import CommandArg, CommandWhitespace
 from nonebot.typing import T_State
 from nonebot_plugin_alconna.uniseg import UniMessage
 
@@ -16,6 +16,24 @@ except ImportError:
     OB11GroupMessageEvent = None
 
 
+motdje_matcher = on_command(
+    "motdje",
+    priority=98,
+    state={"svr_type": "je"},
+)
+motdpe_matcher = on_command(
+    "motdpe",
+    aliases={"motdbe"},
+    priority=98,
+    state={"svr_type": "be"},
+)
+motd_matcher = on_command(
+    "motd",
+    priority=99,
+    state={"svr_type": "auto" if config.enable_auto_detect else "je"},
+)
+
+
 async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
     try:
         ret = await draw(ip, svr_type)
@@ -23,27 +41,18 @@ async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
         msg = UniMessage("出现未知错误，请检查后台输出")
     else:
         msg = UniMessage.image(raw=ret)
-    await msg.send(reply_to=config.mcstat_reply_target)
+    await msg.send(reply_to=config.reply_target)
     raise FinishedException
 
 
-motdpe_matcher = on_command(
-    "motdpe",
-    aliases={"motdbe", "!motdpe", "！motdpe", "!motdbe", "！motdbe"},
-    priority=98,
-    state={"svr_type": "be"},
-)
-motd_matcher = on_command(
-    "motd",
-    aliases={"!motd", "！motd", "motdje", "!motdje", "！motdje"},
-    priority=99,
-    state={"svr_type": "je"},
-)
-
-
 @motd_matcher.handle()
+@motdje_matcher.handle()
 @motdpe_matcher.handle()
-async def _(state: T_State, arg_msg: Message = CommandArg()):
+async def _(
+    state: T_State,
+    arg_msg: Message = CommandArg(),
+    _space: str = CommandWhitespace(),
+):
     arg = arg_msg.extract_plain_text().strip()
     svr_type: ServerType = state["svr_type"]
     await finish_with_query(arg, svr_type)
@@ -64,7 +73,7 @@ def append_shortcut_handler(shortcut: ShortcutType):
 
 
 def startup():
-    if s := config.mcstat_shortcuts:
+    if s := config.shortcuts:
         for v in s:
             append_shortcut_handler(v)
 

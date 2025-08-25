@@ -3,8 +3,7 @@ import socket
 from collections.abc import Sequence
 from functools import partial
 from io import BytesIO
-from typing import TYPE_CHECKING, Any, Optional, Union, cast
-from typing_extensions import TypeAlias
+from typing import TYPE_CHECKING, Any, Optional, TypeAlias, Union, cast
 
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.motd import Motd
@@ -15,7 +14,7 @@ from PIL.Image import Resampling
 from pil_utils import BuildImage, Text2Image
 
 from .config import config
-from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType
+from .const import CODE_COLOR, GAME_MODE_MAP, STROKE_COLOR, ServerType, ServerTypeRaw
 from .res import DEFAULT_ICON_RES, DIRT_RES, GRASS_RES
 from .util import (
     BBCodeTransformer,
@@ -28,7 +27,7 @@ from .util import (
 )
 
 if TYPE_CHECKING:
-    from mcstatus.bedrock_status import BedrockStatusResponse
+    from mcstatus.responses import BedrockStatusResponse
     from pil_utils.typing import ColorType
 
 MARGIN = 32
@@ -42,7 +41,9 @@ LIST_GAP = 12
 
 JE_HEADER = "[MCJE服务器信息]"
 BE_HEADER = "[MCBE服务器信息]"
+AUTO_HEADER = "[MC服务器信息]"
 SUCCESS_TITLE = "请求成功"
+DEFAULT_ERR_TITLE = "出错了！"
 
 ImageType: TypeAlias = Union[BuildImage, Text2Image, "ImageGrid"]
 
@@ -51,7 +52,7 @@ def ex_default_style(text: str, color_code: str = "", **kwargs) -> Text2Image:
     default_kwargs = {
         "font_size": EXTRA_FONT_SIZE,
         "fill": CODE_COLOR[color_code or "f"],
-        "font_families": config.mcstat_font,
+        "font_families": config.font,
         "stroke_ratio": STROKE_RATIO,
         "stroke_fill": STROKE_COLOR[color_code or "f"],
         # "spacing": EXTRA_SPACING,
@@ -86,8 +87,8 @@ def width(obj: ImageType) -> float:
 class ImageLine:
     def __init__(
         self,
-        left: Union[ImageType, str],
-        right: Union[ImageType, str, None] = None,
+        left: ImageType | str,
+        right: ImageType | str | None = None,
         gap: int = LIST_GAP,
     ):
         self.left = ex_default_style(left) if isinstance(left, str) else left
@@ -117,7 +118,7 @@ class ImageGrid(list[ImageLine]):
         self,
         *lines: ImageLine,
         spacing: int = SPACING,
-        gap: Optional[int] = None,
+        gap: int | None = None,
         align_items: bool = True,
     ):
         if gap is not None:
@@ -127,17 +128,15 @@ class ImageGrid(list[ImageLine]):
         self.align_items = align_items
 
     @classmethod
-    def from_list(cls, li: Sequence[Union[ImageType, str]], **kwargs) -> "ImageGrid":
+    def from_list(cls, li: Sequence[ImageType | str], **kwargs) -> "ImageGrid":
         return cls(
-            *(ImageLine(*cast(tuple[Any, Any], x)) for x in chunks(li, 2)),
+            *(ImageLine(*cast("tuple[Any, Any]", x)) for x in chunks(li, 2)),
             **kwargs,
         )
 
     @property
     def width(self) -> float:
-        return max(width(x.left) for x in self) + max(
-            (width(x.right) + x.gap if x.right else 0) for x in self
-        )
+        return max(x.width for x in self)
 
     @property
     def height(self) -> float:
@@ -192,7 +191,11 @@ class ImageGrid(list[ImageLine]):
 
 
 def get_header_by_svr_type(svr_type: ServerType) -> str:
-    return JE_HEADER if svr_type == "je" else BE_HEADER
+    if svr_type == "je":
+        return JE_HEADER
+    if svr_type == "be":
+        return BE_HEADER
+    return AUTO_HEADER
 
 
 def draw_bg(width: int, height: int) -> BuildImage:
@@ -209,8 +212,8 @@ def draw_bg(width: int, height: int) -> BuildImage:
 def build_img(
     header1: str,
     header2: str,
-    icon: Optional[BuildImage] = None,
-    extra: Optional[Union[ImageType, str]] = None,
+    icon: BuildImage | None = None,
+    extra: ImageType | str | None = None,
 ) -> BytesIO:
     if not icon:
         icon = DEFAULT_ICON_RES
@@ -249,7 +252,7 @@ def build_img(
         halign="left",
         fill=header_text_color,
         max_fontsize=TITLE_FONT_SIZE,
-        font_families=config.mcstat_font,
+        font_families=config.font,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=header_stroke_color,
     )
@@ -264,7 +267,7 @@ def build_img(
         halign="left",
         fill=header_text_color,
         max_fontsize=TITLE_FONT_SIZE,
-        font_families=config.mcstat_font,
+        font_families=config.font,
         stroke_ratio=STROKE_RATIO,
         stroke_fill=header_stroke_color,
     )
@@ -283,7 +286,12 @@ def draw_help(svr_type: ServerType) -> BytesIO:
     cmd_prefix_li = list(get_driver().config.command_start)
     prefix = cmd_prefix_li[0] if cmd_prefix_li else ""
 
-    extra_txt = f"查询Java版服务器: {prefix}motd <服务器IP>\n查询基岩版服务器: {prefix}motdpe <服务器IP>"
+    extra_txt = (
+        f"查询Java版服务器: {prefix}motdje <服务器IP>"
+        f"\n查询基岩版服务器: {prefix}motdpe <服务器IP>"
+    )
+    if config.enable_auto_detect:
+        extra_txt += f"\n自动检测服务器类型: {prefix}motd <服务器IP>"
     return build_img(get_header_by_svr_type(svr_type), "使用帮助", extra=extra_txt)
 
 
@@ -291,28 +299,28 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
     transformer = BBCodeTransformer(bedrock=res.motd.bedrock)
     # there're no line spacing in Text2Image since pil-utils 0.2.0
     # so we split lines there then manually add the space
-    motd = (
+    motd = [
         transformer.transform(x) for x in split_motd_lines(trim_motd(res.motd.parsed))
-    )
+    ]
     online_percent = (
         f"{res.players.online / res.players.max * 100:.2f}"
         if res.players.max
         else "?.??"
     )
 
-    mod_svr_type: Optional[str] = None
-    mod_list: Optional[list[str]] = None
+    mod_svr_type: str | None = None
+    mod_list: list[str] | None = None
     if mod_info := res.raw.get("modinfo"):
         if tmp := mod_info.get("type"):
             mod_svr_type = tmp
-        if tmp := mod_info.get("modList"):
+        if tmp := (mod_info.get("mods") or mod_info.get("modList")):
             mod_list = format_mod_list(tmp)
 
     l_style = partial(ex_default_style, color_code="7")
     grid = ImageGrid(align_items=False)
     for line in motd:
         grid.append_line(line)
-    if config.mcstat_show_addr:
+    if config.show_addr:
         grid.append_line(l_style("测试地址: "), addr)
     grid.append_line(l_style("服务端名: "), res.version.name)
     if mod_svr_type:
@@ -328,12 +336,12 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
         l_style("聊天签名: "),
         "必需" if res.enforces_secure_chat else "无需",
     )
-    if config.mcstat_show_delay:
+    if config.show_delay:
         grid.append_line(
             l_style("测试延迟: "),
             ex_default_style(f"{res.latency:.2f}ms", get_latency_color(res.latency)),
         )
-    if mod_list and config.mcstat_show_mods:
+    if mod_list and config.show_mods:
         grid.append_line(
             l_style("Mod 列表: "),
             ImageGrid.from_list(mod_list),
@@ -372,7 +380,7 @@ def draw_bedrock(res: "BedrockStatusResponse", addr: str) -> BytesIO:
     grid = ImageGrid(align_items=False)
     for line in motd:
         grid.append_line(line)
-    if config.mcstat_show_addr:
+    if config.show_addr:
         grid.append_line(l_style("测试地址: "), addr)
     grid.append_line(l_style("协议版本: "), str(res.version.protocol))
     grid.append_line(l_style("游戏版本: "), res.version.version)
@@ -387,7 +395,7 @@ def draw_bedrock(res: "BedrockStatusResponse", addr: str) -> BytesIO:
             l_style("游戏模式: "),
             GAME_MODE_MAP.get(res.gamemode, res.gamemode),
         )
-    if config.mcstat_show_delay:
+    if config.show_delay:
         grid.append_line(
             l_style("测试延迟: "),
             ex_default_style(f"{res.latency:.2f}ms", get_latency_color(res.latency)),
@@ -396,18 +404,50 @@ def draw_bedrock(res: "BedrockStatusResponse", addr: str) -> BytesIO:
     return build_img(BE_HEADER, SUCCESS_TITLE, extra=grid)
 
 
-def draw_error(e: Exception, svr_type: ServerType) -> BytesIO:
-    extra = ""
+def parse_error(e: Exception) -> tuple[str, str]:
     if isinstance(e, TimeoutError):
-        reason = "请求超时"
-    elif isinstance(e, socket.gaierror):
-        reason = "域名解析失败"
-        extra = str(e)
+        return "请求超时", ""
+    if isinstance(e, socket.gaierror):
+        return "域名解析失败", str(e)
+    return DEFAULT_ERR_TITLE, f"{e.__class__.__name__}: {e}"
+
+
+def join_strings(*s: str, sp: str = "：") -> str:
+    return sp.join(x for x in s if x)
+
+
+def draw_error(
+    svr_type: ServerType,
+    *e: Exception | tuple[str, Exception],
+    title: str | None = None,
+) -> BytesIO:
+    if len(e) == 1 and (not title):
+        title, extra = (
+            (x[0], join_strings(*parse_error(x[1])))
+            if isinstance((x := e[0]), tuple)
+            else parse_error(x)
+        )
+        extras = [extra] if extra else None
     else:
-        reason = "出错了！"
-        extra = f"{e.__class__.__name__}: {e}"
-    extra_img = ex_default_style(extra).wrap(MIN_WIDTH - MARGIN * 2) if extra else None
-    return build_img(get_header_by_svr_type(svr_type), reason, extra=extra_img)
+        extras = [
+            (
+                join_strings(x[0], *parse_error(x[1]))
+                if isinstance(x, tuple)
+                else join_strings(*parse_error(x))
+            )
+            for x in e
+        ]
+    if not title:
+        title = DEFAULT_ERR_TITLE
+    if extras:
+        lines = [
+            ImageLine(ex_default_style(x).wrap((MIN_WIDTH * 1.5) - MARGIN * 2))
+            for x in extras
+        ]
+        extra_img = ImageGrid(*lines)
+    else:
+        extra_img = None
+    return build_img(get_header_by_svr_type(svr_type), title, extra=extra_img)
 
 
 def draw_resp(
@@ -420,24 +460,46 @@ def draw_resp(
 
 
 async def draw(ip: str, svr_type: ServerType) -> BytesIO:
-    try:
-        if not ip:
-            return draw_help(svr_type)
-
-        is_java = svr_type == "je"
+    async def _inner(t: ServerTypeRaw) -> BytesIO:
+        is_java = t == "je"
         host, port = await resolve_ip(ip, is_java)
 
         svr = JavaServer(host, port) if is_java else BedrockServer(host, port)
-        kw = {"version": config.mcstat_java_protocol_version} if is_java else {}
-        if config.mcstat_query_twice:
+        kw = {"version": config.java_protocol_version} if is_java else {}
+        if config.query_twice:
             await svr.async_status(**kw)  # 第一次延迟通常不准
         resp = await svr.async_status(**kw)
         return draw_resp(resp, ip)
 
+    try:
+        if not ip:
+            return draw_help(svr_type)
+
+        if svr_type != "auto":
+            return await _inner(svr_type)
+
+        # auto
+        try:
+            return await _inner("je")
+        except Exception as e:
+            logger.exception("获取JE服务器状态/画服务器状态图出错")
+            je_exc = e
+        try:
+            return await _inner("be")
+        except Exception as e:
+            logger.exception("获取BE服务器状态/画服务器状态图出错")
+            be_exc = e
+        return draw_error(
+            svr_type,
+            ("JE", je_exc),
+            ("BE", be_exc),
+            title="所有尝试皆出错",
+        )
+
     except Exception as e:
         logger.exception("获取服务器状态/画服务器状态图出错")
         try:
-            return draw_error(e, svr_type)
+            return draw_error(svr_type, e)
         except Exception:
             logger.exception("画异常状态图失败")
             raise

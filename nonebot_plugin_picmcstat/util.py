@@ -2,12 +2,10 @@ import random
 import re
 import string
 from collections.abc import Iterator, Sequence
-from typing import Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, TypeVar, cast
 
 import dns.asyncresolver
-import dns.name
 import dns.rdatatype as rd
-from dns.rdtypes.IN.SRV import SRV as SRVRecordAnswer  # noqa: N811
 from mcstatus.motd.components import (
     Formatting,
     MinecraftColor,
@@ -28,6 +26,10 @@ from .const import (
     OBFUSCATED_PLACEHOLDER_REGEX,
     STROKE_COLOR,
 )
+
+if TYPE_CHECKING:
+    from dns.rdtypes.IN.SRV import SRV as SRVRecordAnswer  # noqa: N811
+    from mcstatus.forge_data import RawForgeDataMod
 
 RANDOM_CHAR_TEMPLATE = f"{string.ascii_letters}{string.digits}!§$%&?#"
 WHITESPACE_EXCLUDE_NEWLINE = string.whitespace.replace("\n", "")
@@ -55,12 +57,12 @@ def replace_format_code(txt: str, new_str: str = "") -> str:
     return re.sub(FORMAT_CODE_REGEX, new_str, txt)
 
 
-def format_mod_list(li: list[Union[dict, str]]) -> list[str]:
-    def mapping_func(it: Union[dict, str]) -> Optional[str]:
+def format_mod_list(li: list["RawForgeDataMod"] | list[str]) -> list[str]:
+    def mapping_func(it: "RawForgeDataMod | str") -> str | None:
         if isinstance(it, str):
             return it
-        if isinstance(it, dict) and (name := it.get("modid")):
-            version = it.get("version")
+        if isinstance(it, dict) and (name := (it.get("modid") or it.get("modId"))):
+            version = it.get("version") or it.get("modmarker")
             return f"{name}-{version}" if version else name
         return None
 
@@ -69,8 +71,8 @@ def format_mod_list(li: list[Union[dict, str]]) -> list[str]:
 
 async def resolve_host(
     host: str,
-    data_types: Optional[list[rd.RdataType]] = None,
-) -> Optional[str]:
+    data_types: list[rd.RdataType] | None = None,
+) -> str | None:
     data_types = data_types or [rd.CNAME, rd.AAAA, rd.A]
     for rd_type in data_types:
         try:
@@ -92,11 +94,11 @@ async def resolve_host(
 async def resolve_srv(host: str) -> tuple[str, int]:
     host = "_minecraft._tcp." + host
     resp = await DNS_RESOLVER.resolve(host, rd.SRV)
-    answer = cast(SRVRecordAnswer, resp[0])
+    answer = cast("SRVRecordAnswer", resp[0])
     return str(answer.target), int(answer.port)
 
 
-async def resolve_ip(ip: str, srv: bool = False) -> tuple[str, Optional[int]]:
+async def resolve_ip(ip: str, srv: bool = False) -> tuple[str, int | None]:
     if ":" in ip:
         host, port = ip.split(":", maxsplit=1)
     else:
@@ -108,13 +110,12 @@ async def resolve_ip(ip: str, srv: bool = False) -> tuple[str, Optional[int]]:
             host, port = await resolve_srv(host)
         except Exception as e:
             logger.debug(
-                f"Failed to resolve SRV record for {host}: "
-                f"{e.__class__.__name__}: {e}",
+                f"Failed to resolve SRV record for {host}: {e.__class__.__name__}: {e}",
             )
         logger.debug(f"Resolved SRV record for {ip}: {host}:{port}")
 
     return (
-        (await resolve_host(host) if config.mcstat_resolve_dns else None) or host,
+        (await resolve_host(host) if config.resolve_dns else None) or host,
         int(port) if port else None,
     )
 
@@ -178,7 +179,7 @@ def split_motd_lines(motd: Sequence[ParsedMotdComponent]):
     lines: list[list[ParsedMotdComponent]] = []
 
     current_line: list[ParsedMotdComponent] = []
-    using_color: Union[MinecraftColor, WebColor, None] = None
+    using_color: MinecraftColor | WebColor | None = None
     using_formats: list[Formatting] = []
 
     for comp in motd:
@@ -208,7 +209,7 @@ def split_motd_lines(motd: Sequence[ParsedMotdComponent]):
 
             continue
 
-        if isinstance(comp, (MinecraftColor, WebColor)):
+        if isinstance(comp, MinecraftColor | WebColor):
             using_color = comp
 
         elif isinstance(comp, Formatting):
