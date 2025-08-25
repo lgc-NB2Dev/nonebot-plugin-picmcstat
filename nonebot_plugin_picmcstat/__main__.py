@@ -51,8 +51,10 @@ async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
 async def _(
     state: T_State,
     arg_msg: Message = CommandArg(),
-    _space: str = CommandWhitespace(),
+    space: str | None = CommandWhitespace(),
 ):
+    if arg_msg and (space is None):
+        return
     arg = arg_msg.extract_plain_text().strip()
     svr_type: ServerType = state["svr_type"]
     await finish_with_query(arg, svr_type)

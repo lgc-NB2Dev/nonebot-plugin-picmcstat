@@ -286,13 +286,16 @@ def draw_help(svr_type: ServerType) -> BytesIO:
     cmd_prefix_li = list(get_driver().config.command_start)
     prefix = cmd_prefix_li[0] if cmd_prefix_li else ""
 
-    extra_txt = (
-        f"查询Java版服务器: {prefix}motdje <服务器IP>"
-        f"\n查询基岩版服务器: {prefix}motdpe <服务器IP>"
-    )
+    extra_txt = [
+        f"查询Java版服务器: {prefix}motdje <服务器IP>",
+        f"查询基岩版服务器: {prefix}motdpe <服务器IP>",
+    ]
     if config.enable_auto_detect:
-        extra_txt += f"\n自动检测服务器类型: {prefix}motd <服务器IP>"
-    return build_img(get_header_by_svr_type(svr_type), "使用帮助", extra=extra_txt)
+        extra_txt.append(f"自动检测服务器类型: {prefix}motd <服务器IP>")
+    extra = ImageGrid()
+    for x in extra_txt:
+        extra.append_line(x)
+    return build_img(get_header_by_svr_type(svr_type), "使用帮助", extra=extra)
 
 
 def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
