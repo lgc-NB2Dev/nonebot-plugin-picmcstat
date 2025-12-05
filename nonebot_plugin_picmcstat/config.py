@@ -23,6 +23,7 @@ class ConfigClass(BaseModel):
     reply_target: bool = True
     shortcuts: list[ShortcutType] = Field(default_factory=list)
     resolve_dns: bool = True
+    resolve_dns_ipv6: bool = True
     query_twice: bool = True
     java_protocol_version: int = 772
     enable_auto_detect: bool = True

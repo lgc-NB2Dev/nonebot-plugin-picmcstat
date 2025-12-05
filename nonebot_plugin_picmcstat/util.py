@@ -72,8 +72,13 @@ def format_mod_list(li: list["RawForgeDataMod"] | list[str]) -> list[str]:
 async def resolve_host(
     host: str,
     data_types: list[rd.RdataType] | None = None,
+    *,
+    resolve_dns_ipv6: bool | None = None,
 ) -> str | None:
-    data_types = data_types or [rd.CNAME, rd.AAAA, rd.A]
+    if resolve_dns_ipv6 is None:
+        resolve_dns_ipv6 = config.resolve_dns_ipv6
+    if data_types is None:
+        data_types = [rd.CNAME, rd.AAAA, rd.A] if resolve_dns_ipv6 else [rd.CNAME, rd.A]
     for rd_type in data_types:
         try:
             resp = (await DNS_RESOLVER.resolve(host, rd_type)).response
@@ -86,7 +91,7 @@ async def resolve_host(
         else:
             logger.debug(f"Resolved {rd_type.name} record for {host}: {name}")
             if rd_type is rd.CNAME:
-                return await resolve_host(name)
+                return await resolve_host(name, resolve_dns_ipv6=resolve_dns_ipv6)
             return name
     return None
 
@@ -98,7 +103,12 @@ async def resolve_srv(host: str) -> tuple[str, int]:
     return str(answer.target), int(answer.port)
 
 
-async def resolve_ip(ip: str, srv: bool = False) -> tuple[str, int | None]:
+async def resolve_ip(
+    ip: str,
+    srv: bool = False,
+    *,
+    resolve_dns_ipv6: bool | None = None,
+) -> tuple[str, int | None]:
     if ":" in ip:
         host, port = ip.split(":", maxsplit=1)
     else:
@@ -115,7 +125,7 @@ async def resolve_ip(ip: str, srv: bool = False) -> tuple[str, int | None]:
         logger.debug(f"Resolved SRV record for {ip}: {host}:{port}")
 
     return (
-        (await resolve_host(host) if config.resolve_dns else None) or host,
+        (await resolve_host(host, resolve_dns_ipv6=resolve_dns_ipv6) if config.resolve_dns else None) or host,
         int(port) if port else None,
     )
 

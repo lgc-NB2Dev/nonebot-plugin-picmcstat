@@ -1,4 +1,5 @@
 import base64
+import errno
 import socket
 from collections.abc import Sequence
 from functools import partial
@@ -462,10 +463,23 @@ def draw_resp(
     return draw_bedrock(resp, addr)
 
 
+def is_ipv6_unreachable_error(e: BaseException) -> bool:
+    """Check if exception is due to IPv6 network being unreachable."""
+    if isinstance(e, OSError) and e.errno in (
+        errno.ENETUNREACH,
+        errno.EHOSTUNREACH,
+        errno.EADDRNOTAVAIL,
+    ):
+        return True
+    if e.__cause__:
+        return is_ipv6_unreachable_error(e.__cause__)
+    return False
+
+
 async def draw(ip: str, svr_type: ServerType) -> BytesIO:
-    async def _inner(t: ServerTypeRaw) -> BytesIO:
+    async def _inner(t: ServerTypeRaw, *, resolve_dns_ipv6: bool | None = None) -> BytesIO:
         is_java = t == "je"
-        host, port = await resolve_ip(ip, is_java)
+        host, port = await resolve_ip(ip, is_java, resolve_dns_ipv6=resolve_dns_ipv6)
 
         svr = JavaServer(host, port) if is_java else BedrockServer(host, port)
         kw = {"version": config.java_protocol_version} if is_java else {}
@@ -474,21 +488,38 @@ async def draw(ip: str, svr_type: ServerType) -> BytesIO:
         resp = await svr.async_status(**kw)
         return draw_resp(resp, ip)
 
+    async def _inner_with_fallback(t: ServerTypeRaw) -> BytesIO:
+        # If IPv6 is disabled, just use IPv4
+        if not config.resolve_dns_ipv6:
+            return await _inner(t, resolve_dns_ipv6=False)
+
+        # Try IPv6 first, fall back to IPv4 if unreachable
+        try:
+            return await _inner(t, resolve_dns_ipv6=True)
+        except Exception as e:
+            if is_ipv6_unreachable_error(e):
+                logger.debug(
+                    f"IPv6 connection failed with {e.__class__.__name__}, "
+                    "falling back to IPv4",
+                )
+                return await _inner(t, resolve_dns_ipv6=False)
+            raise
+
     try:
         if not ip:
             return draw_help(svr_type)
 
         if svr_type != "auto":
-            return await _inner(svr_type)
+            return await _inner_with_fallback(svr_type)
 
         # auto
         try:
-            return await _inner("je")
+            return await _inner_with_fallback("je")
         except Exception as e:
             logger.exception("获取JE服务器状态/画服务器状态图出错")
             je_exc = e
         try:
-            return await _inner("be")
+            return await _inner_with_fallback("be")
         except Exception as e:
             logger.exception("获取BE服务器状态/画服务器状态图出错")
             be_exc = e

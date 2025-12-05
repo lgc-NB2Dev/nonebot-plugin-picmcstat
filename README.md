@@ -193,6 +193,15 @@ MCSTAT_SHORTCUTS='
 如果你的服务器在运行 Clash 等拦截了 DNS 解析的软件，且查询部分地址时遇到了问题，请尝试关闭此配置项  
 此配置项不影响 Java 服务器的 SRV 记录解析
 
+### `MCSTAT_RESOLVE_DNS_IPV6` - 是否启用 IPv6 解析
+
+默认：`True`
+
+是否优先使用 IPv6 地址进行查询  
+当启用此配置项时，会优先尝试使用 IPv6 地址进行连接，如连接失败则自动回落到 IPv4  
+如果你的网络环境不支持 IPv6，可以关闭此配置项以避免不必要的等待  
+此配置项仅在 `MCSTAT_RESOLVE_DNS` 启用时生效
+
 ### `MCSTAT_QUERY_TWICE` - 是否查询两遍服务器状态
 
 默认：`True`
@@ -236,6 +245,11 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 感谢大家的赞助！你们的赞助将是我继续创作的动力！
 
 ## 📝 更新日志
+
+### 0.8.1
+
+- 添加配置项 `MCSTAT_RESOLVE_DNS_IPV6`，用于禁用 IPv6 解析（[#29](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/issues/29)）
+- 当 IPv6 连接失败时自动回落到 IPv4
 
 ### 0.8.0
 
