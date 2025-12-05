@@ -468,7 +468,6 @@ def is_ipv6_unreachable_error(e: BaseException) -> bool:
     if isinstance(e, OSError) and e.errno in (
         errno.ENETUNREACH,
         errno.EHOSTUNREACH,
-        errno.ECONNREFUSED,
         errno.EADDRNOTAVAIL,
     ):
         return True
