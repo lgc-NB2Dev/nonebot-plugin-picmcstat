@@ -246,6 +246,11 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 
 ## 📝 更新日志
 
+### 0.8.1
+
+- 添加配置项 `MCSTAT_RESOLVE_DNS_IPV6`，用于禁用 IPv6 解析（[#29](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/issues/29)）
+- 当 IPv6 连接失败时自动回落到 IPv4
+
 ### 0.8.0
 
 - 加入自动检测服务器类型的功能，默认启用（Thanks to [#28](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/pull/28)）
