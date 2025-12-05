@@ -477,9 +477,9 @@ def is_ipv6_unreachable_error(e: BaseException) -> bool:
 
 
 async def draw(ip: str, svr_type: ServerType) -> BytesIO:
-    async def _inner(t: ServerTypeRaw, *, ipv6: bool | None = None) -> BytesIO:
+    async def _inner(t: ServerTypeRaw, *, resolve_dns_ipv6: bool | None = None) -> BytesIO:
         is_java = t == "je"
-        host, port = await resolve_ip(ip, is_java, ipv6=ipv6)
+        host, port = await resolve_ip(ip, is_java, resolve_dns_ipv6=resolve_dns_ipv6)
 
         svr = JavaServer(host, port) if is_java else BedrockServer(host, port)
         kw = {"version": config.java_protocol_version} if is_java else {}
@@ -490,19 +490,19 @@ async def draw(ip: str, svr_type: ServerType) -> BytesIO:
 
     async def _inner_with_fallback(t: ServerTypeRaw) -> BytesIO:
         # If IPv6 is disabled, just use IPv4
-        if not config.ipv6:
-            return await _inner(t, ipv6=False)
+        if not config.resolve_dns_ipv6:
+            return await _inner(t, resolve_dns_ipv6=False)
 
         # Try IPv6 first, fall back to IPv4 if unreachable
         try:
-            return await _inner(t, ipv6=True)
+            return await _inner(t, resolve_dns_ipv6=True)
         except Exception as e:
             if is_ipv6_unreachable_error(e):
                 logger.debug(
                     f"IPv6 connection failed with {e.__class__.__name__}, "
                     "falling back to IPv4",
                 )
-                return await _inner(t, ipv6=False)
+                return await _inner(t, resolve_dns_ipv6=False)
             raise
 
     try:

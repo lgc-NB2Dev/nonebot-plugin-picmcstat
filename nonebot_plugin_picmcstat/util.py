@@ -73,12 +73,12 @@ async def resolve_host(
     host: str,
     data_types: list[rd.RdataType] | None = None,
     *,
-    ipv6: bool | None = None,
+    resolve_dns_ipv6: bool | None = None,
 ) -> str | None:
-    if ipv6 is None:
-        ipv6 = config.ipv6
+    if resolve_dns_ipv6 is None:
+        resolve_dns_ipv6 = config.resolve_dns_ipv6
     if data_types is None:
-        data_types = [rd.CNAME, rd.AAAA, rd.A] if ipv6 else [rd.CNAME, rd.A]
+        data_types = [rd.CNAME, rd.AAAA, rd.A] if resolve_dns_ipv6 else [rd.CNAME, rd.A]
     for rd_type in data_types:
         try:
             resp = (await DNS_RESOLVER.resolve(host, rd_type)).response
@@ -91,7 +91,7 @@ async def resolve_host(
         else:
             logger.debug(f"Resolved {rd_type.name} record for {host}: {name}")
             if rd_type is rd.CNAME:
-                return await resolve_host(name, ipv6=ipv6)
+                return await resolve_host(name, resolve_dns_ipv6=resolve_dns_ipv6)
             return name
     return None
 
@@ -107,7 +107,7 @@ async def resolve_ip(
     ip: str,
     srv: bool = False,
     *,
-    ipv6: bool | None = None,
+    resolve_dns_ipv6: bool | None = None,
 ) -> tuple[str, int | None]:
     if ":" in ip:
         host, port = ip.split(":", maxsplit=1)
@@ -125,7 +125,7 @@ async def resolve_ip(
         logger.debug(f"Resolved SRV record for {ip}: {host}:{port}")
 
     return (
-        (await resolve_host(host, ipv6=ipv6) if config.resolve_dns else None) or host,
+        (await resolve_host(host, resolve_dns_ipv6=resolve_dns_ipv6) if config.resolve_dns else None) or host,
         int(port) if port else None,
     )
 
