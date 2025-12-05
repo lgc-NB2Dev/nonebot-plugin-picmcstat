@@ -26,6 +26,7 @@ class ConfigClass(BaseModel):
     query_twice: bool = True
     java_protocol_version: int = 772
     enable_auto_detect: bool = True
+    ipv6: bool = True
 
     @field_validator("font", mode="before")
     def transform_to_list(cls, v: Any):  # noqa: N805
